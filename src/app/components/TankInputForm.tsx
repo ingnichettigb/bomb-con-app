@@ -158,7 +158,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
               : 'bg-sky-100/80 text-sky-900 border-sky-200 hover:bg-sky-200/90 hover:text-sky-950'
           }`}
         >
-          Fondo
+          Fondo conico
           {!fondoCollettoConfirmed && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
         </button>
         <button
@@ -170,7 +170,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
               : 'bg-sky-100/80 text-sky-900 border-sky-200 hover:bg-sky-200/90 hover:text-sky-950'
           }`}
         >
-          Coperchio
+          Coperchio bombato
           {!coperchioCollettoConfirmed && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
         </button>
         <button
