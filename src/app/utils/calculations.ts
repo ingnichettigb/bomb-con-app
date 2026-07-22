@@ -9,6 +9,49 @@ import { TankInput, HeadConfig, HeadCalculated, CalculationResult } from '../typ
  * Calculates geometry and volumes for a single head (coperchio or fondo)
  */
 export function calculateHead(dInt: number, config: HeadConfig): HeadCalculated {
+  // === Testa conica (fondo conico retto) ===
+  if (config.type === 'conico') {
+    const hCono = Math.max(1, config.hCono ?? dInt / 2);
+    const R_base = dInt / 2;
+    const slant_int = Math.sqrt(R_base * R_base + hCono * hCono); // apotema interno (mm)
+    // Volume interno del cono (retto, apice in basso)
+    const V_cono_L = (Math.PI * R_base * R_base * hCono) / 3 / 1e6;
+    const V_colletto_L = (Math.PI * R_base * R_base * config.hColletto) / 1e6;
+    // Sviluppo lamiera: settore circolare di raggio = apotema esterno (~slant + sp/2)
+    const slant_ext = Math.sqrt((R_base + config.sp / 2) ** 2 + hCono ** 2);
+    const Sviluppo_mm = 2 * Math.PI * (R_base + config.sp / 2); // arco alla base (mm)
+    // Superficie laterale del cono (m²) usata come area del disco/settore da tagliare
+    const Area_lat_mq = (Math.PI * R_base * slant_ext) / 1e6;
+    const Area_colletto_mq = (2 * Math.PI * R_base * config.hColletto) / 1e6;
+    const Area_totale_mq = Area_lat_mq + Area_colletto_mq;
+    const Peso_lamiera_kg = Area_totale_mq * config.sp * 8;
+
+    return {
+      R: 0,
+      r: 0,
+      DR: 0,
+      X: 0,
+      alfa: 0,
+      beta: 0,
+      H1: 0,
+      H_int: hCono,
+      H2: 0,
+      H3: hCono, // usato come "altezza zona cono" nel loop di taratura
+      Y: 0,
+      Baric: 0,
+      K: 0,
+      H_esterna_totale: hCono + config.hColletto + config.sp,
+      V_calotta: V_cono_L, // volume cono
+      V_toro: 0,
+      V_raccordo: 0,
+      V_colletto: V_colletto_L,
+      V_testata_LT: V_cono_L + V_colletto_L,
+      Sviluppo_mm,
+      Area_disco_da_tagliare_mq: Area_totale_mq,
+      Peso_lamiera_kg,
+    };
+  }
+
   let R = 0;
   let r = 0;
 
@@ -48,7 +91,6 @@ export function calculateHead(dInt: number, config: HeadConfig): HeadCalculated 
   const Y = R * Math.sin(alfaRad);
 
   // Baricentro del toro (Pappo-Guldino)
-  // formula: r*2*2*r*SIN(beta/2*PI()/180) / (r*2*PI()/360*beta*3) * COS(beta/2*PI()/180) + X
   let Baric = X;
   if (beta !== 0 && r !== 0) {
     const denom = (r * 2 * Math.PI / 360 * beta * 3);
