@@ -1,24 +1,49 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense, useEffect, useState } from "react";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+const App = lazy(() => import("../app/App"));
+
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "BOMB-CON TARATURA — Calibrazione Serbatoi" },
+      {
+        name: "description",
+        content:
+          "BOMB-CON TARATURA: calcolo geometrico, tabella di taratura e certificato PDF per serbatoi cilindrici verticali.",
+      },
+      { property: "og:title", content: "BOMB-CON TARATURA" },
+      {
+        property: "og:description",
+        content:
+          "Applicazione per la calibrazione e taratura di serbatoi con generazione del certificato PDF.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
+        Caricamento BOMB-CON TARATURA…
+      </div>
+    );
+  }
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
+          Caricamento BOMB-CON TARATURA…
+        </div>
+      }
     >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+      <App />
+    </Suspense>
   );
 }

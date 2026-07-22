@@ -2,6 +2,18 @@
 @source "../src";
 @import "tw-animate-css";
 
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@media print {
+  body { background: white !important; color: #111827 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  @page { size: A4 portrait; margin: 12mm; }
+  tr, p, h1, h2, h3, .print-card { page-break-inside: avoid; break-inside: avoid; }
+  thead { display: table-header-group; }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*

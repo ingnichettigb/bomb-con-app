@@ -1,0 +1,1042 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Language, translations } from './translations';
+import { CalculationResult, CompilerInfo } from '../types';
+
+export async function generateCalibrationPDF(
+  result: CalculationResult,
+  lang: Language = 'it',
+  compilerInfo?: CompilerInfo,
+  condensed: boolean = false,
+  reportNumberInput?: string
+) {
+  try {
+    const t = translations[lang];
+    const maxCm = Math.ceil(result.H_tot / 10);
+
+    const getLocality = (address?: string) => {
+      if (!address) return '';
+      const parts = address.split(',');
+      if (parts.length > 1) {
+        return parts[parts.length - 1].trim();
+      }
+      return address.trim();
+    };
+
+    const formatDateToIT = (dateStr?: string) => {
+      if (!dateStr) {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yyyy = now.getFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+      }
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return dateStr;
+    };
+
+    const reportNumber = reportNumberInput || (() => {
+      const now = new Date();
+      let yyyy = String(now.getFullYear());
+      let mm = String(now.getMonth() + 1).padStart(2, '0');
+      let dd = String(now.getDate()).padStart(2, '0');
+      
+      if (result.input.report.data) {
+        const parts = result.input.report.data.split('-');
+        if (parts.length === 3) {
+          yyyy = parts[0];
+          mm = parts[1].padStart(2, '0');
+          dd = parts[2].padStart(2, '0');
+        }
+      }
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      return `${yyyy}${mm}${dd}${hh}${min}-01`;
+    })();
+
+    // Reconstruct listData
+    const listData = [];
+    for (let cm = 0; cm <= maxCm; cm++) {
+      const mm = cm * 10;
+      const hClamped = Math.min(mm, result.H_tot);
+      const litriVal = result.litriCumulativi[hClamped] || 0;
+      listData.push({
+        cm,
+        mm,
+        litri: litriVal,
+        delta: cm > 0 ? litriVal - (result.litriCumulativi[Math.min((cm - 1) * 10, result.H_tot)] || 0) : 0
+      });
+    }
+
+    const labels: Record<Language, any> = {
+      it: {
+        title: 'CERTIFICATO DI TARATURA & SCHEDA TECNICA',
+        tableTitle: 'TABELLA DI TARATURA CENTIMETRICA',
+        customer: 'Cliente:',
+        reference: 'Riferimento:',
+        tank: 'Serbatoio:',
+        date: 'Data Rilievo:',
+        dwg: 'Numero Disegno:',
+        compiler: 'Compilatore:',
+        factoryNo: 'N° Fabbrica:',
+        tagNo: 'Tag Number:',
+        job: 'Commessa:',
+        extValidity: 'Validità Estesa:',
+        
+        // Geometry & Tech Data
+        techTitle: 'Dati Geometrici e Strutturali',
+        internalDiameter: 'Diametro Interno (D_int):',
+        cylinderLength: 'Altezza Cilindrica (L_cil):',
+        totalHeight: 'Altezza Totale Interna (H_tot):',
+        density: 'Densità del Fluido (rho):',
+        
+        // Volumes
+        volumeTitle: 'Volumi dei Singoli Componenti',
+        bottomVolume: 'Volume Fondo Bombato:',
+        cylinderVolume: 'Volume Mantello Cilindrico:',
+        topVolume: 'Volume Coperchio Bombato:',
+        totalVolume: 'VOLUME TOTALE NOMINALE:',
+        
+        // Sheets
+        sheetTitle: 'Dati Costruttivi e Lamiere (Acciaio)',
+        bottomHead: 'Fondo Calotta:',
+        topHead: 'Coperchio Calotta:',
+        thickness: 'Spessore Lamiera (Sp):',
+        development: 'Sviluppo Srotolamento Lamiera (Diametro):',
+        area: 'Area Disco Grezzo Taglio:',
+        sheetWeight: 'Peso Lamiera:',
+        
+        // Weights
+        weightTitle: 'Pesi e Carichi',
+        fullWeight: 'Peso Contenuto Pieno:',
+        weightPerCm: 'Peso per cm di mantello cilindrico:',
+        
+        // Table Headers
+        colCm: 'Altezza (cm)',
+        colMm: 'Altezza (mm)',
+        colVol: 'Volume Cumulativo (litri)',
+        colDelta: 'Delta (l/cm)',
+        
+        // Footers
+        page: 'Pagina',
+        signature: 'Firma del Compilatore',
+        stamp: 'Timbro della Ditta',
+        emitted: 'Emesso il:',
+        capacityMax: 'Capacità max:',
+      },
+      en: {
+        title: 'CALIBRATION CERTIFICATE & TECHNICAL DATASHEET',
+        tableTitle: 'CENTIMETRIC CALIBRATION TABLE',
+        customer: 'Customer:',
+        reference: 'Reference:',
+        tank: 'Tank:',
+        date: 'Survey Date:',
+        dwg: 'Drawing Number:',
+        compiler: 'Compiler:',
+        factoryNo: 'Factory No:',
+        tagNo: 'Tag Number:',
+        job: 'Job/Order:',
+        extValidity: 'Extended Validity:',
+        
+        techTitle: 'Geometric & Structural Data',
+        internalDiameter: 'Internal Diameter (D_int):',
+        cylinderLength: 'Cylindrical Length (L_cil):',
+        totalHeight: 'Total Internal Height (H_tot):',
+        density: 'Fluid Density (rho):',
+        
+        volumeTitle: 'Volumes of Individual Components',
+        bottomVolume: 'Bottom Head Volume:',
+        cylinderVolume: 'Cylindrical Shell Volume:',
+        topVolume: 'Top Head Volume:',
+        totalVolume: 'TOTAL NOMINAL VOLUME:',
+        
+        sheetTitle: 'Construction & Sheet Metal Details (Steel)',
+        bottomHead: 'Bottom Head:',
+        topHead: 'Top Head:',
+        thickness: 'Sheet Thickness (s):',
+        development: 'Cutting Development (Diameter):',
+        area: 'Raw Disc Area:',
+        sheetWeight: 'Sheet Metal Weight:',
+        
+        weightTitle: 'Weights & Loads',
+        fullWeight: 'Full Load Weight:',
+        weightPerCm: 'Weight per cm of cylindrical shell:',
+        
+        colCm: 'Height (cm)',
+        colMm: 'Height (mm)',
+        colVol: 'Cumulative Volume (liters)',
+        colDelta: 'Delta (l/cm)',
+        
+        page: 'Page',
+        signature: 'Compiler\'s Signature',
+        stamp: 'Company Stamp',
+        emitted: 'Issued on:',
+        capacityMax: 'Max Capacity:',
+      },
+      es: {
+        title: 'CERTIFICADO DE CALIBRACIÓN Y FICHA TÉCNICA',
+        tableTitle: 'TABLA DE CALIBRACIÓN CENTIMÉTRICA',
+        customer: 'Cliente:',
+        reference: 'Referencia:',
+        tank: 'Depósito:',
+        date: 'Fecha de Levantamiento:',
+        dwg: 'Número de Plano:',
+        compiler: 'Compilador:',
+        factoryNo: 'N° Fábrica:',
+        tagNo: 'Número de Tag:',
+        job: 'Pedido/Commessa:',
+        extValidity: 'Validez Extendida:',
+        
+        techTitle: 'Datos Geométricos y Estructurales',
+        internalDiameter: 'Diámetro Interno (D_int):',
+        cylinderLength: 'Altura Cilíndrica (L_cil):',
+        totalHeight: 'Altura Interna Total (H_tot):',
+        density: 'Densidad del Fluido (rho):',
+        
+        volumeTitle: 'Volúmenes de los Componentes Individuales',
+        bottomVolume: 'Volumen del Extremo Inferior:',
+        cylinderVolume: 'Volumen del Cuerpo Cilíndrico:',
+        topVolume: 'Volumen del Extremo Superior:',
+        totalVolume: 'VOLUMEN NOMINAL TOTAL:',
+        
+        sheetTitle: 'Detalles de Fabricación y Chapa (Acero)',
+        bottomHead: 'Extremo Inferior:',
+        topHead: 'Extremo Superior:',
+        thickness: 'Espesor de Chapa (s):',
+        development: 'Desarrollo de Corte (Diámetro):',
+        area: 'Área del Disco Bruto:',
+        sheetWeight: 'Peso de la Chapa:',
+        
+        weightTitle: 'Pesos y Cargas',
+        fullWeight: 'Peso con Carga Máxima:',
+        weightPerCm: 'Peso por cm de cuerpo cilíndrico:',
+        
+        colCm: 'Altura (cm)',
+        colMm: 'Altura (mm)',
+        colVol: 'Volumen Acumulado (litros)',
+        colDelta: 'Delta (l/cm)',
+        
+        page: 'Página',
+        signature: 'Firma del Compilador',
+        stamp: 'Sello de la Empresa',
+        emitted: 'Emitido el:',
+        capacityMax: 'Capacidad Máx:',
+      },
+      de: {
+        title: 'KALIBRIERZERTIFIKAT & TECHNISCHES DATENBLATT',
+        tableTitle: 'ZENTIMETER-KALIBRIERTABELLE',
+        customer: 'Kunde:',
+        reference: 'Referenz:',
+        tank: 'Behälter:',
+        date: 'Messdatum:',
+        dwg: 'Zeichnungsnummer:',
+        compiler: 'Ersteller:',
+        factoryNo: 'Fabriknummer:',
+        tagNo: 'Tag-Nummer:',
+        job: 'Auftrag:',
+        extValidity: 'Erweiterte Gültigkeit:',
+        
+        techTitle: 'Geometrische & strukturelle Daten',
+        internalDiameter: 'Innendurchmesser (D_int):',
+        cylinderLength: 'Zylindrische Höhe (L_cil):',
+        totalHeight: 'Innere Gesamthöhe (H_tot):',
+        density: 'Spezifisches Gewicht des Fluids (rho):',
+        
+        volumeTitle: 'Füllvolumen der einzelnen Komponenten',
+        bottomVolume: 'Volumen des unteren Bodens:',
+        cylinderVolume: 'Volumen des zylindrischen Mantels:',
+        topVolume: 'Volumen des oberen Deckels:',
+        totalVolume: 'GESAMTES NENNFÜLLVOLUMEN:',
+        
+        sheetTitle: 'Konstruktionsdaten & Zuschnittbleche (Stahl)',
+        bottomHead: 'Unterer Boden:',
+        topHead: 'Oberer Deckel:',
+        thickness: 'Blechdicke (s):',
+        development: 'Blech-Zuschnittsentwicklung (Durchmesser):',
+        area: 'Fläche des rohen Zuschnittsblechs:',
+        sheetWeight: 'Blechgewicht:',
+        
+        weightTitle: 'Gewichte & Lasten',
+        fullWeight: 'Gewicht bei Vollfüllung:',
+        weightPerCm: 'Gewicht pro cm des zylindrischen Mantels:',
+        
+        colCm: 'Höhe (cm)',
+        colMm: 'Höhe (mm)',
+        colVol: 'Kumuliertes Volumen (Liter)',
+        colDelta: 'Delta (l/cm)',
+        
+        page: 'Seite',
+        signature: 'Erstellerunterschrift',
+        stamp: 'Firmenstempel',
+        emitted: 'Ausgestellt am:',
+        capacityMax: 'Max. Kapazität:',
+      }
+    };
+
+    const formatNumPDF = (num: number, decimals: number = 2) => {
+      if (num === undefined || isNaN(num)) return lang === 'en' ? '0.00' : '0,00';
+      const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : 'it-IT';
+      return num.toLocaleString(locale, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      });
+    };
+
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Page 1: Design letterhead & compiler details
+    const hasLogo = compilerInfo && compilerInfo.logoType !== 'none';
+    if (hasLogo && compilerInfo) {
+      if (compilerInfo.logoType === 'custom' && compilerInfo.customLogoData) {
+        try {
+          doc.addImage(compilerInfo.customLogoData, 'PNG', 15, 15, 20, 20);
+        } catch (e) {
+          console.error('Error rendering custom logo in PDF', e);
+          doc.setFillColor(6, 78, 59);
+          doc.roundedRect(15, 15, 20, 20, 3, 3, 'F');
+        }
+      } else {
+        doc.setFillColor(6, 78, 59);
+        doc.roundedRect(15, 15, 20, 20, 3, 3, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        const initial = compilerInfo.ditta ? compilerInfo.ditta.charAt(0).toUpperCase() : 'B';
+        doc.text(initial, 25, 27, { align: 'center' });
+      }
+    }
+
+    const textX = hasLogo ? 40 : 15;
+    if (compilerInfo) {
+      doc.setTextColor(31, 41, 55);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text(compilerInfo.ditta, textX, 19);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(75, 85, 99);
+
+      let detailsY = 23;
+      const detailsLineHeight = 3.8;
+
+      if (compilerInfo.indirizzo) {
+        doc.text(compilerInfo.indirizzo, textX, detailsY);
+        detailsY += detailsLineHeight;
+      }
+
+      let contactRow = '';
+      if (compilerInfo.telefono) contactRow += `Tel: ${compilerInfo.telefono}`;
+      if (compilerInfo.email) contactRow += `${contactRow ? '  •  ' : ''}Email: ${compilerInfo.email}`;
+      if (contactRow) {
+        doc.text(contactRow, textX, detailsY);
+        detailsY += detailsLineHeight;
+      }
+
+      let legalRow = '';
+      if (compilerInfo.partitaIva) legalRow += `${t.vatNumber || 'P.IVA'}: ${compilerInfo.partitaIva}`;
+      if (compilerInfo.emailPec) legalRow += `${legalRow ? '  •  ' : ''}PEC: ${compilerInfo.emailPec}`;
+      if (legalRow) {
+        doc.text(legalRow, textX, detailsY);
+        detailsY += detailsLineHeight;
+      }
+    }
+
+    // Tank Shape Clue/Schematic on the Top Right
+    const x_c = 172;
+    const y_c = 15.5;
+    const w_c = 14;
+    const h_c = 18;
+    const dome_h = 3.5;
+
+    // Helper to draw a semi-ellipse
+    const drawSemiEllipse = (cx: number, cy: number, rx: number, ry: number, startAngle: number, endAngle: number) => {
+      const steps = 30;
+      let prevX = cx + rx * Math.cos(startAngle);
+      let prevY = cy + ry * Math.sin(startAngle);
+      for (let i = 1; i <= steps; i++) {
+        const angle = startAngle + (endAngle - startAngle) * (i / steps);
+        const currX = cx + rx * Math.cos(angle);
+        const currY = cy + ry * Math.sin(angle);
+        doc.line(prevX, prevY, currX, currY);
+        prevX = currX;
+        prevY = currY;
+      }
+    };
+
+    // Helper to draw dashed line
+    const drawDashedLine = (x1: number, y1: number, x2: number, y2: number) => {
+      const dash = 1.2;
+      const gap = 0.8;
+      let cy = y1;
+      while (cy < y2) {
+        const ny = Math.min(cy + dash, y2);
+        doc.line(x1, cy, x1, ny);
+        cy = ny + gap;
+      }
+    };
+
+    // 1. Fill background of tank with light green emerald-50
+    doc.setFillColor(240, 253, 244);
+    doc.rect(x_c, y_c, w_c, h_c, 'F');
+    doc.ellipse(x_c + w_c / 2, y_c, w_c / 2, dome_h, 'F');
+    doc.ellipse(x_c + w_c / 2, y_c + h_c, w_c / 2, dome_h, 'F');
+
+    // 2. Draw tank outlines
+    doc.setDrawColor(6, 78, 59);
+    doc.setLineWidth(0.4);
+    // Left vertical line
+    doc.line(x_c, y_c, x_c, y_c + h_c);
+    // Right vertical line
+    doc.line(x_c + w_c, y_c, x_c + w_c, y_c + h_c);
+    // Top dome outline
+    drawSemiEllipse(x_c + w_c / 2, y_c, w_c / 2, dome_h, Math.PI, 2 * Math.PI);
+    // Bottom dome outline
+    drawSemiEllipse(x_c + w_c / 2, y_c + h_c, w_c / 2, dome_h, 0, Math.PI);
+
+    // 3. Draw horizontal weld junctions (seams)
+    doc.setDrawColor(110, 160, 140);
+    doc.setLineWidth(0.2);
+    doc.line(x_c, y_c, x_c + w_c, y_c);
+    doc.line(x_c, y_c + h_c, x_c + w_c, y_c + h_c);
+
+    // 4. Draw axis of symmetry (vertical dashed line)
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.15);
+    drawDashedLine(x_c + w_c / 2, y_c - dome_h - 2, x_c + w_c / 2, y_c + h_c + dome_h + 2);
+
+    // 5. Draw text labels and indicator lines
+    const labelTop = lang === 'en' ? 'Top Head' : lang === 'es' ? 'Cúpula Sup.' : lang === 'de' ? 'Obere Kuppe' : 'Coperchio';
+    const labelMid = lang === 'en' ? 'Cylinder' : lang === 'es' ? 'Cuerpo Cil.' : lang === 'de' ? 'Zylinder' : 'Mantello';
+    const labelBot = lang === 'en' ? 'Bottom Head' : lang === 'es' ? 'Cúpula Inf.' : lang === 'de' ? 'Unterer Boden' : 'Fondo';
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(107, 114, 128);
+
+    // Top Head pointer & text
+    const y_top = y_c - dome_h / 2;
+    doc.setDrawColor(209, 213, 219);
+    doc.setLineWidth(0.15);
+    doc.line(160, y_top, 173, y_top);
+    doc.setFillColor(107, 114, 128);
+    doc.circle(173, y_top, 0.4, 'F');
+    doc.text(labelTop, 158, y_top + 0.8, { align: 'right' });
+
+    // Mid / Cylinder pointer & text
+    const y_mid = y_c + h_c / 2;
+    doc.setDrawColor(209, 213, 219);
+    doc.setLineWidth(0.15);
+    doc.line(160, y_mid, 174, y_mid);
+    doc.circle(174, y_mid, 0.4, 'F');
+    doc.text(labelMid, 158, y_mid + 0.8, { align: 'right' });
+
+    // Bottom Head pointer & text
+    const y_bot = y_c + h_c + dome_h / 2;
+    doc.setDrawColor(209, 213, 219);
+    doc.setLineWidth(0.15);
+    doc.line(160, y_bot, 173, y_bot);
+    doc.circle(173, y_bot, 0.4, 'F');
+    doc.text(labelBot, 158, y_bot + 0.8, { align: 'right' });
+
+    // Horizontal line
+    doc.setDrawColor(6, 78, 59);
+    doc.setLineWidth(0.6);
+    doc.line(15, 41, 205, 41);
+
+    // Primary Title block
+    doc.setTextColor(6, 78, 59);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(labels[lang].title, 15, 49);
+
+    // Repositioned Relation Number Box (Right of the title, aligned with right-most fields, with thin double green border)
+    const reportLabelText = lang === 'en' ? 'Report No' : lang === 'es' ? 'Relación N°' : lang === 'de' ? 'Bericht Nr' : 'Relazione N';
+    const boxW = 58;
+    const boxX = 205 - boxW; // Aligned perfectly with the right edge at 205
+    const boxY = 43;
+    const boxH = 8;
+
+    // Draw thin double vibrant green border
+    doc.setDrawColor(16, 185, 129); // Vibrant green (Emerald 500)
+    doc.setLineWidth(0.15);
+    doc.roundedRect(boxX, boxY, boxW, boxH, 1, 1, 'D');
+    doc.roundedRect(boxX + 0.4, boxY + 0.4, boxW - 0.8, boxH - 0.8, 0.8, 0.8, 'D');
+
+    // Text inside the relation number box (larger and bold)
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(6, 78, 59);
+    doc.text(`${reportLabelText}: ${reportNumber}`, boxX + boxW / 2, boxY + 5.5, { align: 'center' });
+
+    // Meta details table
+    autoTable(doc, {
+      startY: 56,
+      margin: { left: 15, right: 15 },
+      theme: 'plain',
+      styles: {
+        fontSize: 8,
+        cellPadding: 1.5,
+        textColor: [31, 41, 55],
+        lineColor: [229, 231, 235],
+        lineWidth: 0.1,
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 35 },
+        1: { cellWidth: 55 },
+        2: { fontStyle: 'bold', cellWidth: 35 },
+        3: { cellWidth: 65 },
+      },
+      body: [
+        [
+          labels[lang].customer.toUpperCase(), result.input.report.cliente || '-',
+          labels[lang].job.toUpperCase(), result.input.report.commessa || result.input.report.riferimento || '-'
+        ],
+        [
+          labels[lang].tank.toUpperCase(), result.input.report.nomeSerbatoio || '-',
+          labels[lang].compiler.toUpperCase(), result.input.report.compilatore || '-'
+        ],
+        [
+          labels[lang].dwg.toUpperCase(), result.input.report.numeroDisegno || '-',
+          labels[lang].date.toUpperCase(), result.input.report.data || '-'
+        ],
+        [
+          labels[lang].factoryNo.toUpperCase(), result.input.report.numeroFabbrica || '-',
+          labels[lang].tagNo.toUpperCase(), result.input.report.tagNumber || '-'
+        ]
+      ]
+    });
+
+    let currentY = (doc as any).lastAutoTable.finalY + 6;
+
+    // Optional Extended validity note
+    if (result.input.report.validitaEstesa) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(107, 114, 128);
+      const validityText = `${labels[lang].extValidity.toUpperCase()} ${result.input.report.validitaEstesa}`;
+      doc.text(validityText, 15, currentY);
+      currentY += 4.5;
+    }
+
+    // Geometry & structural details
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(6, 78, 59);
+    doc.text(labels[lang].techTitle, 15, currentY);
+    currentY += 3;
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: 15, right: 15 },
+      theme: 'plain',
+      styles: {
+        fontSize: 8,
+        cellPadding: 1.8,
+        textColor: [31, 41, 55],
+        lineColor: [229, 231, 235],
+        lineWidth: 0.1,
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 60 },
+        1: { fontStyle: 'normal', cellWidth: 30 },
+        2: { fontStyle: 'bold', cellWidth: 60 },
+        3: { fontStyle: 'normal', cellWidth: 30 },
+      },
+      body: [
+        [
+          labels[lang].internalDiameter, `${result.input.dInt} mm`,
+          labels[lang].bottomVolume, `${formatNumPDF(result.volumeFondo, 2)} l`
+        ],
+        [
+          labels[lang].cylinderLength, `${result.input.lCil} mm`,
+          labels[lang].cylinderVolume, `${formatNumPDF(result.volumeCilindro, 2)} l`
+        ],
+        [
+          labels[lang].totalHeight, `${result.H_tot} mm`,
+          labels[lang].topVolume, `${formatNumPDF(result.volumeCoperchio, 2)} l`
+        ],
+        [
+          labels[lang].density, `${formatNumPDF(result.input.rho, 3)} kg/dm³`,
+          labels[lang].totalVolume, `${formatNumPDF(result.volumeTotale, 2)} l`
+        ]
+      ]
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 6;
+
+    // Sheets details
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(6, 78, 59);
+    doc.text(labels[lang].sheetTitle, 15, currentY);
+    currentY += 3;
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: 15, right: 15 },
+      theme: 'plain',
+      styles: {
+        fontSize: 8,
+        cellPadding: 1.8,
+        textColor: [31, 41, 55],
+        lineColor: [229, 231, 235],
+        lineWidth: 0.1,
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 45 },
+        1: { cellWidth: 45 },
+        2: { fontStyle: 'bold', cellWidth: 45 },
+        3: { cellWidth: 45 },
+      },
+      body: [
+        [
+          labels[lang].bottomHead, '',
+          labels[lang].topHead, ''
+        ],
+        [
+          `  • ${labels[lang].thickness}`, `${result.input.fondo.sp} mm`,
+          `  • ${labels[lang].thickness}`, `${result.input.coperchio.sp} mm`
+        ],
+        [
+          `  • ${labels[lang].development}`, `${formatNumPDF(result.fondo.Sviluppo_mm, 1)} mm`,
+          `  • ${labels[lang].development}`, `${formatNumPDF(result.coperchio.Sviluppo_mm, 1)} mm`
+        ],
+        [
+          `  • ${labels[lang].area}`, `${formatNumPDF(result.sviluppoFondoMq, 3)} m²`,
+          `  • ${labels[lang].area}`, `${formatNumPDF(result.sviluppoCoperchioMq, 3)} m²`
+        ],
+        [
+          `  • ${labels[lang].sheetWeight}`, `${formatNumPDF(result.pesoLamieraFondo, 1)} kg`,
+          `  • ${labels[lang].sheetWeight}`, `${formatNumPDF(result.pesoLamieraCoperchio, 1)} kg`
+        ]
+      ],
+      didParseCell: (data) => {
+        if (data.row.index === 0) {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [240, 253, 244];
+          data.cell.styles.textColor = [6, 78, 59];
+        }
+      }
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 6;
+
+    // Weights & loads
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(6, 78, 59);
+    doc.text(labels[lang].weightTitle, 15, currentY);
+    currentY += 3;
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: 15, right: 15 },
+      theme: 'plain',
+      styles: {
+        fontSize: 8.5,
+        cellPadding: 2,
+        textColor: [31, 41, 55],
+        lineColor: [229, 231, 235],
+        lineWidth: 0.1,
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 60 },
+        1: { cellWidth: 30 },
+        2: { fontStyle: 'bold', cellWidth: 60 },
+        3: { cellWidth: 30 },
+      },
+      body: [
+        [
+          labels[lang].fullWeight, `${formatNumPDF(result.pesoContenutoTotale, 1)} kg (${formatNumPDF(result.pesoContenutoTotale / 1000, 3)} t)`,
+          labels[lang].weightPerCm, `${formatNumPDF(result.pesoContenutoPerCmCilindro, 2)} kg/cm`
+        ]
+      ]
+    });
+
+    // Signature/Stamp blocks
+    const footerY = 230;
+    doc.setDrawColor(209, 213, 219);
+    doc.setLineWidth(0.3);
+
+    doc.roundedRect(25, footerY, 60, 22, 1, 1, 'D');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(107, 114, 128);
+    doc.text(labels[lang].stamp, 55, footerY + 5, { align: 'center' });
+
+    doc.roundedRect(125, footerY, 60, 22, 1, 1, 'D');
+    doc.text(labels[lang].signature, 155, footerY + 5, { align: 'center' });
+
+    const labelText = lang === 'en' ? 'Place and date:' : lang === 'es' ? 'Lugar y fecha:' : lang === 'de' ? 'Ort und Datum:' : 'Luogo e data:';
+    const locality = getLocality(compilerInfo?.indirizzo) || '-';
+    const formattedDate = formatDateToIT(result.input.report.data);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(31, 41, 55);
+    doc.text(labelText, 105, footerY + 6, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text(locality, 105, footerY + 11, { align: 'center' });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text(formattedDate, 105, footerY + 16, { align: 'center' });
+
+    if (result.input.report.compilatore) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(55, 65, 81);
+      doc.text(result.input.report.compilatore, 155, footerY + 16, { align: 'center' });
+    }
+
+    if (compilerInfo?.customNote) {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(7);
+      doc.setTextColor(156, 163, 175);
+      doc.text(compilerInfo.customNote, 105, footerY + 28, { align: 'center' });
+    }
+
+    // Page 2+: Calibration List Table
+    if (condensed) {
+      const condensedHeaders = [
+        [
+          labels[lang].colCm,
+          labels[lang].colMm,
+          labels[lang].colVol,
+          labels[lang].colDelta,
+          '', // Spacer
+          labels[lang].colCm,
+          labels[lang].colMm,
+          labels[lang].colVol,
+          labels[lang].colDelta
+        ]
+      ];
+
+      const rowsPerPage = 38;
+      const totalRows = listData.length;
+      const pagesNeeded = Math.ceil(totalRows / (rowsPerPage * 2));
+
+      for (let p = 0; p < pagesNeeded; p++) {
+        doc.addPage();
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(6, 78, 59);
+        doc.text(labels[lang].tableTitle, 15, 18);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(75, 85, 99);
+        doc.text(`${labels[lang].tank} ${result.input.report.nomeSerbatoio || '-'}   •   ${labels[lang].dwg} ${result.input.report.numeroDisegno || '-'}   •   ${labels[lang].capacityMax} ${formatNumPDF(result.volumeTotale, 1)} l`, 15, 23);
+
+        const leftStart = p * (rowsPerPage * 2);
+        const rightStart = leftStart + rowsPerPage;
+
+        const pageBody = [];
+        for (let r = 0; r < rowsPerPage; r++) {
+          const leftIdx = leftStart + r;
+          const rightIdx = rightStart + r;
+
+          if (leftIdx >= totalRows && rightIdx >= totalRows) {
+            break;
+          }
+
+          const leftRow = leftIdx < totalRows ? listData[leftIdx] : null;
+          const rightRow = rightIdx < totalRows ? listData[rightIdx] : null;
+
+          pageBody.push([
+            leftRow ? `${leftRow.cm} cm` : '',
+            leftRow ? `${leftRow.mm} mm` : '',
+            leftRow ? `${formatNumPDF(leftRow.litri, 2)} l` : '',
+            leftRow ? (leftRow.cm > 0 ? `${formatNumPDF(leftRow.delta, 2)} l/cm` : '-') : '',
+            '', // Spacer
+            rightRow ? `${rightRow.cm} cm` : '',
+            rightRow ? `${rightRow.mm} mm` : '',
+            rightRow ? `${formatNumPDF(rightRow.litri, 2)} l` : '',
+            rightRow ? (rightRow.cm > 0 ? `${formatNumPDF(rightRow.delta, 2)} l/cm` : '-') : '',
+          ]);
+        }
+
+        autoTable(doc, {
+          startY: 26,
+          margin: { left: 15, right: 15 },
+          head: condensedHeaders,
+          body: pageBody,
+          theme: 'striped',
+          styles: {
+            fontSize: 8,
+            cellPadding: 1.6,
+            valign: 'middle',
+            halign: 'center',
+          },
+          headStyles: {
+            fillColor: [6, 78, 59],
+            textColor: [255, 255, 255],
+            fontSize: 8.5,
+            fontStyle: 'bold',
+          },
+          columnStyles: {
+            0: { halign: 'left', fontStyle: 'bold', cellWidth: 20 },
+            1: { halign: 'center', cellWidth: 20 },
+            2: { halign: 'right', fontStyle: 'bold', cellWidth: 27 },
+            3: { halign: 'right', cellWidth: 21 },
+            4: { cellWidth: 4, fillColor: [255, 255, 255] },
+            5: { halign: 'left', fontStyle: 'bold', cellWidth: 20 },
+            6: { halign: 'center', cellWidth: 20 },
+            7: { halign: 'right', fontStyle: 'bold', cellWidth: 27 },
+            8: { halign: 'right', cellWidth: 21 }
+          },
+          alternateRowStyles: {
+            fillColor: [220, 245, 235],
+          },
+          didParseCell: (data) => {
+            if (data.column.index === 4) {
+              data.cell.styles.fillColor = [255, 255, 255];
+              if (data.section === 'head') {
+                data.cell.styles.lineWidth = 0;
+              }
+            }
+          },
+          didDrawCell: (data) => {
+            const col = data.column.index;
+            const x = data.cell.x;
+            const y = data.cell.y;
+            const w = data.cell.width;
+            const h = data.cell.height;
+
+            // Electric green vertical lines
+            doc.setDrawColor(16, 185, 129);
+            doc.setLineWidth(0.15);
+
+            // Left Table Left Edge
+            if (col === 0) {
+              doc.line(x - 0.2, y, x - 0.2, y + h);
+              doc.line(x + 0.2, y, x + 0.2, y + h);
+            }
+            // Left Table Right Edge
+            if (col === 3) {
+              const rx = x + w;
+              doc.line(rx - 0.2, y, rx - 0.2, y + h);
+              doc.line(rx + 0.2, y, rx + 0.2, y + h);
+            }
+            // Right Table Left Edge
+            if (col === 5) {
+              doc.line(x - 0.2, y, x - 0.2, y + h);
+              doc.line(x + 0.2, y, x + 0.2, y + h);
+            }
+            // Right Table Right Edge
+            if (col === 8) {
+              const rx = x + w;
+              doc.line(rx - 0.2, y, rx - 0.2, y + h);
+              doc.line(rx + 0.2, y, rx + 0.2, y + h);
+            }
+
+            // Top double horizontal line
+            if (data.section === 'head' && col !== 4) {
+              doc.line(x, y - 0.2, x + w, y - 0.2);
+              doc.line(x, y + 0.2, x + w, y + 0.2);
+            }
+          }
+        });
+
+        // Bottom double horizontal line
+        const finalY = (doc as any).lastAutoTable.finalY;
+        if (finalY) {
+          doc.setDrawColor(16, 185, 129);
+          doc.setLineWidth(0.15);
+          // Left column bottom
+          doc.line(15, finalY - 0.2, 103, finalY - 0.2);
+          doc.line(15, finalY + 0.2, 103, finalY + 0.2);
+          // Right column bottom
+          doc.line(107, finalY - 0.2, 195, finalY - 0.2);
+          doc.line(107, finalY + 0.2, 195, finalY + 0.2);
+        }
+      }
+    } else {
+      doc.addPage();
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(6, 78, 59);
+      doc.text(labels[lang].tableTitle, 15, 18);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(75, 85, 99);
+      doc.text(`${labels[lang].tank} ${result.input.report.nomeSerbatoio || '-'}   •   ${labels[lang].dwg} ${result.input.report.numeroDisegno || '-'}   •   ${labels[lang].capacityMax} ${formatNumPDF(result.volumeTotale, 1)} l`, 15, 23);
+
+      const tableHeaders = [
+        [
+          labels[lang].colCm,
+          labels[lang].colMm,
+          labels[lang].colVol,
+          labels[lang].colDelta
+        ]
+      ];
+
+      const tableBody = listData.map((row) => {
+        return [
+          `${row.cm} cm`,
+          `${row.mm} mm`,
+          `${formatNumPDF(row.litri, 2)} l`,
+          row.cm > 0 ? `${formatNumPDF(row.delta, 2)} l/cm` : '-'
+        ];
+      });
+
+      autoTable(doc, {
+        startY: 26,
+        margin: { left: 15, right: 15, top: 20, bottom: 20 },
+        head: tableHeaders,
+        body: tableBody,
+        theme: 'striped',
+        styles: {
+          fontSize: 8.5,
+          cellPadding: 1.8,
+          valign: 'middle',
+          halign: 'center',
+        },
+        headStyles: {
+          fillColor: [6, 78, 59],
+          textColor: [255, 255, 255],
+          fontSize: 9,
+          fontStyle: 'bold',
+        },
+        columnStyles: {
+          0: { halign: 'left', fontStyle: 'bold' },
+          1: { halign: 'center' },
+          2: { halign: 'right', fontStyle: 'bold' },
+          3: { halign: 'right' },
+        },
+        alternateRowStyles: {
+          fillColor: [220, 245, 235],
+        },
+        didDrawCell: (data) => {
+          const col = data.column.index;
+          const x = data.cell.x;
+          const y = data.cell.y;
+          const w = data.cell.width;
+          const h = data.cell.height;
+
+          // Electric green vertical lines
+          doc.setDrawColor(16, 185, 129);
+          doc.setLineWidth(0.15);
+
+          // Table Left Edge
+          if (col === 0) {
+            doc.line(x - 0.2, y, x - 0.2, y + h);
+            doc.line(x + 0.2, y, x + 0.2, y + h);
+          }
+          // Table Right Edge
+          if (col === 3) {
+            const rx = x + w;
+            doc.line(rx - 0.2, y, rx - 0.2, y + h);
+            doc.line(rx + 0.2, y, rx + 0.2, y + h);
+          }
+
+          // Top double horizontal line
+          if (data.section === 'head') {
+            doc.line(x, y - 0.2, x + w, y - 0.2);
+            doc.line(x, y + 0.2, x + w, y + 0.2);
+          }
+        },
+        didDrawPage: (data) => {
+          if (data.pageNumber > 1) {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(6, 78, 59);
+            doc.text(labels[lang].tableTitle, 15, 13);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            doc.setTextColor(107, 114, 128);
+            doc.text(`${labels[lang].tank} ${result.input.report.nomeSerbatoio || '-'}   •   ${labels[lang].dwg} ${result.input.report.numeroDisegno || '-'}`, 15, 17);
+            
+            doc.setDrawColor(229, 231, 235);
+            doc.setLineWidth(0.3);
+            doc.line(15, 19, 195, 19);
+          }
+
+          // Double bottom horizontal line for the page
+          const finalY = data.cursor?.y || data.table?.finalY;
+          if (finalY) {
+            doc.setDrawColor(16, 185, 129);
+            doc.setLineWidth(0.15);
+            doc.line(15, finalY - 0.2, 195, finalY - 0.2);
+            doc.line(15, finalY + 0.2, 195, finalY + 0.2);
+          }
+        }
+      });
+    }
+
+    // Second pass: Page numbering and consistent footer
+    const totalPagesCount = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPagesCount; i++) {
+      doc.setPage(i);
+      doc.setDrawColor(229, 231, 235);
+      doc.setLineWidth(0.4);
+      doc.line(15, 282, 195, 282);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(107, 114, 128);
+
+      const emitText = `${labels[lang].emitted} ${result.input.report.data || new Date().toISOString().split('T')[0]}`;
+      doc.text(emitText, 15, 287);
+      doc.text('Bomb-Bomb Calibration SaaS', 105, 287, { align: 'center' });
+
+      const pageText = `${labels[lang].page} ${i} / ${totalPagesCount}`;
+      doc.text(pageText, 195, 287, { align: 'right' });
+    }
+
+    // Suggested Filename Construction:
+    const rawNome = result.input.report.nomeSerbatoio || 'serbatoio';
+    const rawDwg = result.input.report.numeroDisegno || '';
+    
+    const partDesc = rawNome.slice(0, 10);
+    const sanitizeName = (str: string) => {
+      return str.replace(/[\/\\:*?"<>|]/g, '-').replace(/-+/g, '-');
+    };
+    const sanitizedDesc = sanitizeName(partDesc);
+    const sanitizedDisegno = sanitizeName(rawDwg);
+    let nomeFileProposto = `${sanitizedDesc}${sanitizedDisegno}`.trim();
+    if (!nomeFileProposto.toLowerCase().endsWith('.pdf')) {
+      nomeFileProposto += '.pdf';
+    }
+
+    const pdfBlob = doc.output('blob');
+
+    // Standard Download
+    const url = URL.createObjectURL(pdfBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = nomeFileProposto;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+  } catch (err: any) {
+    console.error('PDF generation error', err);
+    alert(
+      lang === 'en' ? `Failed to generate or save PDF: ${err.message}` :
+      lang === 'es' ? `No se pudo generar o guardar el PDF: ${err.message}` :
+      lang === 'de' ? `PDF konnte nicht generiert oder gespeichert werden: ${err.message}` :
+      `Impossibile generare o salvare il PDF: ${err.message}`
+    );
+  }
+}
