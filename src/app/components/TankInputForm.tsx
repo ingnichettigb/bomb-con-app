@@ -26,32 +26,27 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
   // Spin animation trigger count
   const [spinCount, setSpinCount] = useState<number>(0);
 
-  // Fondo State
-  const [fondoType, setFondoType] = useState<HeadType>(initialInput.fondo.type);
+  // Fondo State (sempre CONICO)
   const [fondoSp, setFondoSp] = useState<number>(initialInput.fondo.sp);
   const [fondoColletto, setFondoColletto] = useState<number>(initialInput.fondo.hColletto);
-  const [fondoRCustom, setFondoRCustom] = useState<number>(initialInput.fondo.R_custom ?? initialInput.dInt);
-  const [fondoRCustomVal, setFondoRCustomVal] = useState<number>(initialInput.fondo.r_custom ?? (initialInput.dInt / 10));
+  const [fondoHCono, setFondoHCono] = useState<number>(initialInput.fondo.hCono ?? Math.round(initialInput.dInt / 2));
   const [fondoCollettoConfirmed, setFondoCollettoConfirmed] = useState<boolean>(true);
+  // Costante: fondo sempre conico
+  const fondoType: HeadType = 'conico';
+  const fondoRCustom = 0;
+  const fondoRCustomVal = 0;
 
-  // Coperchio State
-  const [coperchioType, setCoperchioType] = useState<HeadType>(initialInput.coperchio.type);
+  // Coperchio State (sempre BOMBATO)
+  const [coperchioType, setCoperchioType] = useState<HeadType>(
+    initialInput.coperchio.type === 'conico' ? 'pseudoellittico' : initialInput.coperchio.type
+  );
   const [coperchioSp, setCoperchioSp] = useState<number>(initialInput.coperchio.sp);
   const [coperchioColletto, setCoperchioColletto] = useState<number>(initialInput.coperchio.hColletto);
   const [coperchioRCustom, setCoperchioRCustom] = useState<number>(initialInput.coperchio.R_custom ?? initialInput.dInt);
   const [coperchioRCustomVal, setCoperchioRCustomVal] = useState<number>(initialInput.coperchio.r_custom ?? (initialInput.dInt / 10));
   const [coperchioCollettoConfirmed, setCoperchioCollettoConfirmed] = useState<boolean>(true);
-  const [coperchioUgualeAlFondo, setCoperchioUgualeAlFondo] = useState<boolean>(() => {
-    return (
-      initialInput.fondo.type === initialInput.coperchio.type &&
-      initialInput.fondo.sp === initialInput.coperchio.sp &&
-      initialInput.fondo.hColletto === initialInput.coperchio.hColletto &&
-      (initialInput.fondo.type !== 'custom' || (
-        (initialInput.fondo.R_custom ?? initialInput.dInt) === (initialInput.coperchio.R_custom ?? initialInput.dInt) &&
-        (initialInput.fondo.r_custom ?? (initialInput.dInt / 10)) === (initialInput.coperchio.r_custom ?? (initialInput.dInt / 10))
-      ))
-    );
-  });
+  const coperchioUgualeAlFondo = false;
+  const setCoperchioUgualeAlFondo = (_: boolean) => {};
 
   // Report Meta State
   const [cliente, setCliente] = useState(initialInput.report.cliente);
@@ -108,10 +103,10 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
       lCil: lCil || 2000,
       rho: rho || 1,
       fondo: {
-        type: fondoType,
+        type: 'conico',
         sp: fondoSp || 5,
         hColletto: fondoColletto || 25,
-        ...(fondoType === 'custom' ? { R_custom: fondoRCustom, r_custom: fondoRCustomVal } : {})
+        hCono: fondoHCono || Math.round((dInt || 1000) / 2),
       },
       coperchio: {
         type: coperchioType,
@@ -163,7 +158,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
               : 'bg-sky-100/80 text-sky-900 border-sky-200 hover:bg-sky-200/90 hover:text-sky-950'
           }`}
         >
-          Fondo
+          Fondo conico
           {!fondoCollettoConfirmed && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
         </button>
         <button
@@ -175,7 +170,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
               : 'bg-sky-100/80 text-sky-900 border-sky-200 hover:bg-sky-200/90 hover:text-sky-950'
           }`}
         >
-          Coperchio
+          Coperchio bombato
           {!coperchioCollettoConfirmed && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
         </button>
         <button
@@ -269,32 +264,28 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-neutral-950 pb-2 border-b border-neutral-200 flex items-center gap-1.5">
               <Layers className="w-4 h-4 text-emerald-800" />
-              Geometria Testa del Fondo
+              Geometria Fondo Conico
             </h3>
 
+            <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-lg text-[11px] text-emerald-950 font-medium">
+              Il fondo è un <strong>cono retto</strong> con vertice rivolto verso il basso. Definire l'altezza del cono (dalla base cilindrica al vertice).
+            </div>
+
             <div>
-              <label className="block text-xs font-bold text-neutral-900 mb-2 uppercase tracking-wide">Tipologia Testa Fondo</label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'decinormale', label: 'Decinormale', desc: 'R=1×D, r=D/10' },
-                  { id: 'pseudoellittico', label: 'Pseudoellittico', desc: 'R=0.833×D, r=0.156×D' },
-                  { id: 'custom', label: 'Custom', desc: 'Misure non std.' },
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => setFondoType(t.id as HeadType)}
-                    className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl text-center transition-all cursor-pointer ${
-                      fondoType === t.id
-                        ? 'border-emerald-800 bg-emerald-50 text-emerald-950 font-extrabold ring-1 ring-emerald-800'
-                        : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300'
-                    }`}
-                  >
-                    <span className="text-xs font-bold block">{t.label}</span>
-                    <span className="text-[9px] text-neutral-700 mt-0.5 leading-tight font-medium">{t.desc}</span>
-                  </button>
-                ))}
-              </div>
+              <label className="block text-xs font-bold text-neutral-900 mb-1 flex items-center gap-1 uppercase tracking-wide">
+                Altezza Cono (h_cono)
+                <span className="text-[10px] text-neutral-700 font-bold">(mm)</span>
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="10000"
+                required
+                value={fondoHCono || ''}
+                onChange={(e) => setFondoHCono(Math.max(1, parseInt(e.target.value) || 0))}
+                className="w-full text-sm bg-[#d7ecd7]/80 border-2 border-emerald-300/80 rounded-lg px-3 py-2 text-emerald-950 font-bold focus:bg-[#cde9cd] focus:ring-2 focus:ring-emerald-800 focus:outline-hidden transition-colors"
+              />
+              <span className="text-[10px] text-neutral-600 mt-1 block">Altezza verticale dal piano di attacco al vertice del cono.</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -319,86 +310,20 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
                   Altezza Colletto (h_colletto)
                   <span className="text-[10px] text-neutral-700 font-bold">(mm)</span>
                 </label>
-                <div className="relative rounded-md shadow-xs">
-                  <input
-                    type="number"
-                    min="0"
-                    max="1000"
-                    required
-                    value={fondoColletto ?? ''}
-                    onChange={(e) => {
-                      setFondoColletto(Math.max(0, parseInt(e.target.value) || 0));
-                      setFondoCollettoConfirmed(true);
-                    }}
-                    className={`w-full text-sm border-2 rounded-lg px-3 py-2 text-emerald-950 font-bold focus:ring-2 focus:ring-emerald-800 focus:outline-hidden ${
-                      !fondoCollettoConfirmed
-                        ? 'bg-amber-100 border-amber-400 ring-2 ring-amber-200'
-                        : 'bg-[#d7ecd7]/80 border-emerald-300/80 focus:bg-[#cde9cd]'
-                    }`}
-                  />
-                  {fondoColletto === fondoSp * 5 && (
-                    <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-[10px] text-emerald-900 font-bold italic">
-                      5 × Sp
-                    </span>
-                  )}
-                </div>
+                <input
+                  type="number"
+                  min="0"
+                  max="1000"
+                  required
+                  value={fondoColletto ?? ''}
+                  onChange={(e) => {
+                    setFondoColletto(Math.max(0, parseInt(e.target.value) || 0));
+                    setFondoCollettoConfirmed(true);
+                  }}
+                  className="w-full text-sm bg-[#d7ecd7]/80 border-2 border-emerald-300/80 rounded-lg px-3 py-2 text-emerald-950 font-bold focus:bg-[#cde9cd] focus:ring-2 focus:ring-emerald-800 focus:outline-hidden transition-colors"
+                />
               </div>
             </div>
-
-            {/* Colletto Confirmation Prompt */}
-            {!fondoCollettoConfirmed && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between gap-2 animate-fade-in">
-                <div className="flex items-start gap-2 text-xs text-amber-800">
-                  <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-semibold block">Nuovo Colletto Proposto: {fondoSp * 5} mm</span>
-                    <span className="text-[11px] opacity-80">Calcolato automaticamente (5 × Spessore).</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setFondoCollettoConfirmed(true)}
-                  className="bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold py-1 px-2.5 rounded-md transition-colors flex items-center gap-1 shadow-xs"
-                >
-                  <Check className="w-3 h-3" />
-                  Conferma
-                </button>
-              </div>
-            )}
-
-            {fondoType === 'custom' && (
-              <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-200 space-y-3 animate-fade-in">
-                <span className="text-xs font-bold text-emerald-950 uppercase tracking-wider block">Misure Non Standard (Fondo)</span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-bold text-neutral-900 mb-1 uppercase tracking-wide">
-                      Raggio Bombatura (R_custom) (mm)
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={fondoRCustom || ''}
-                      onChange={(e) => setFondoRCustom(Math.max(1, parseInt(e.target.value) || 0))}
-                      className="w-full text-sm bg-[#d7ecd7]/80 border-2 border-emerald-300/80 rounded-lg px-3 py-1.5 text-emerald-950 font-bold focus:bg-[#cde9cd] focus:ring-2 focus:ring-emerald-800 focus:outline-hidden transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-neutral-900 mb-1 uppercase tracking-wide">
-                      Raggio Toro Raccordo (r_custom) (mm)
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      value={fondoRCustomVal || ''}
-                      onChange={(e) => setFondoRCustomVal(Math.max(1, parseInt(e.target.value) || 0))}
-                      className="w-full text-sm bg-[#d7ecd7]/80 border-2 border-emerald-300/80 rounded-lg px-3 py-1.5 text-emerald-950 font-bold focus:bg-[#cde9cd] focus:ring-2 focus:ring-emerald-800 focus:outline-hidden transition-colors"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -406,30 +331,8 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-neutral-950 pb-2 border-b border-neutral-200 flex items-center gap-1.5">
               <Layers className="w-4 h-4 text-emerald-800" />
-              Geometria Testa del Coperchio
+              Geometria Coperchio Bombato
             </h3>
-
-            {/* Sync Toggle */}
-            <div className="p-3.5 bg-emerald-50/50 rounded-xl border-2 border-emerald-300/40 flex items-center justify-between gap-4">
-              <div className="flex items-start gap-2.5">
-                <RefreshCw className={`w-4 h-4 text-emerald-800 mt-0.5 ${coperchioUgualeAlFondo ? 'animate-spin-slow' : ''}`} />
-                <div>
-                  <span className="text-xs font-bold text-neutral-950 block">Coperchio Uguale al Fondo</span>
-                  <span className="text-[10px] text-neutral-700 block leading-tight font-medium">
-                    Sincronizza automaticamente tipo, spessore e parametri geometrici del coperchio con il fondo.
-                  </span>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={coperchioUgualeAlFondo}
-                  onChange={(e) => setCoperchioUgualeAlFondo(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-850"></div>
-              </label>
-            </div>
 
             <div>
               <label className="block text-xs font-bold text-neutral-900 mb-2 flex items-center gap-1.5 uppercase tracking-wide">

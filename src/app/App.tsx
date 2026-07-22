@@ -85,14 +85,15 @@ export default function App() {
     lCil: 5200,      // 5.2 meters cylindrical shell
     rho: 0.85,       // Gazole/diesel density
     fondo: {
-      type: 'pseudoellittico',
+      type: 'conico',
       sp: 8,
-      hColletto: 40, // 5 * sp
+      hColletto: 40,
+      hCono: 900, // altezza del cono retto inferiore
     },
     coperchio: {
       type: 'pseudoellittico',
       sp: 6,
-      hColletto: 30, // 5 * sp
+      hColletto: 30,
     },
     report: {
       cliente: 'Petrolchimica Padana S.p.A.',
