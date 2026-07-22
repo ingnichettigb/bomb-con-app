@@ -152,48 +152,53 @@ export function calculateTank(input: TankInput): CalculationResult {
   const fondo = calculateHead(dInt, input.fondo);
   const coperchio = calculateHead(dInt, input.coperchio);
 
+  const isConicFondo = input.fondo.type === 'conico';
+
   // Altezze zone
-  const H3_fondo = fondo.H3;
-  const H2_fondo = fondo.H2;
+  const H3_fondo = fondo.H3; // per conico = hCono
+  const H2_fondo = isConicFondo ? 0 : fondo.H2;
   const h_colletto_fondo = input.fondo.hColletto;
   const H3_coperchio = coperchio.H3;
   const H2_coperchio = coperchio.H2;
   const h_colletto_coperchio = input.coperchio.hColletto;
 
   // Altezze cumulative (quote, in mm, misurate dal fondo = 0)
-  const z1 = H3_fondo;
-  const z2 = z1 + H2_fondo;
-  const z3 = z2 + h_colletto_fondo;
-  const z4 = z3 + lCil;
-  const z5 = z4 + h_colletto_coperchio;
-  const z6 = z5 + H2_coperchio;
-  const z7 = z6 + H3_coperchio; // H_tot
-  
+  const z1 = H3_fondo;                       // fine cono (o calotta) fondo
+  const z2 = z1 + H2_fondo;                  // fine raccordo toroidale fondo (=z1 per conico)
+  const z3 = z2 + h_colletto_fondo;          // fine colletto fondo
+  const z4 = z3 + lCil;                      // fine mantello cilindrico
+  const z5 = z4 + h_colletto_coperchio;      // fine colletto coperchio
+  const z6 = z5 + H2_coperchio;              // fine raccordo toroidale coperchio
+  const z7 = z6 + H3_coperchio;              // H_tot
+
   const H_tot = Math.round(z7);
 
-  // Precalculare raggio_fine_zona1 e costanti zona 2
-  const raggio_fine_zona1 = Math.sqrt(H3_fondo * (2 * fondo.R - H3_fondo));
-  const BH_fondo = (raggio_fine_zona1 - fondo.X) * 2;
-  let termSqFondo = fondo.r * fondo.r - Math.pow(BH_fondo / 2, 2);
+  // Precalcolo costanti zona 2 (solo per fondo bombato)
+  const raggio_fine_zona1 = isConicFondo ? dInt / 2 : Math.sqrt(H3_fondo * (2 * fondo.R - H3_fondo));
+  const BH_fondo = isConicFondo ? 0 : (raggio_fine_zona1 - fondo.X) * 2;
+  let termSqFondo = isConicFondo ? 0 : fondo.r * fondo.r - Math.pow(BH_fondo / 2, 2);
   if (termSqFondo < 0) termSqFondo = 0;
-  const BI_fondo = fondo.r - Math.sqrt(termSqFondo);
+  const BI_fondo = isConicFondo ? 0 : fondo.r - Math.sqrt(termSqFondo);
 
-  // Array to hold values for each height mm (0-indexed to H_tot)
   const raggioProfile = new Array<number>(H_tot + 1).fill(0);
   const litriCumulativi = new Array<number>(H_tot + 1).fill(0);
 
-  // Calculate radius for each h (1 mm to H_tot mm)
   for (let h = 1; h <= H_tot; h++) {
     let rVal = 0;
 
     if (h <= z1) {
-      // Zona 1 — calotta sferica fondo
-      const h_zona = h;
-      let term = h_zona * (2 * fondo.R - h_zona);
-      if (term < 0) term = 0;
-      rVal = Math.sqrt(term);
+      if (isConicFondo) {
+        // Cono retto: raggio lineare da 0 (a h=0) fino a dInt/2 (a h=hCono)
+        rVal = (dInt / 2) * (h / H3_fondo);
+      } else {
+        // Zona 1 — calotta sferica fondo bombato
+        const h_zona = h;
+        let term = h_zona * (2 * fondo.R - h_zona);
+        if (term < 0) term = 0;
+        rVal = Math.sqrt(term);
+      }
     } else if (h <= z2) {
-      // Zona 2 — raccordo toroidale fondo
+      // Zona 2 — raccordo toroidale fondo (skippato se conico, perché z1==z2)
       const h_zona = h - z1;
       const BJ = BI_fondo + h_zona;
       let term = BJ * (2 * fondo.r - BJ);
@@ -203,7 +208,7 @@ export function calculateTank(input: TankInput): CalculationResult {
       // Zone 3, 4, 5 — colletti e parte cilindrica
       rVal = dInt / 2;
     } else if (h <= z6) {
-      // Zona 6 — raccordo toroidale coperchio (mirror zona 2)
+      // Zona 6 — raccordo toroidale coperchio
       const h_zona = h - z5;
       const BL = coperchio.r - h_zona + 1;
       let term = BL * (2 * coperchio.r - BL);
@@ -211,7 +216,7 @@ export function calculateTank(input: TankInput): CalculationResult {
       const BM = Math.sqrt(term);
       rVal = (dInt / 2 - coperchio.r) + BM;
     } else {
-      // Zona 7 — calotta sferica coperchio (mirror zona 1)
+      // Zona 7 — calotta sferica coperchio
       const h_zona = h - z6;
       const BN = H3_coperchio - h_zona;
       let term = BN * (2 * coperchio.R - BN);
@@ -221,7 +226,6 @@ export function calculateTank(input: TankInput): CalculationResult {
 
     raggioProfile[h] = rVal;
 
-    // Volume of this 1mm slice in liters
     const Area_sezione = Math.PI * rVal * rVal;
     const Volume_fetta = Area_sezione * 1 / 1e6;
     litriCumulativi[h] = litriCumulativi[h - 1] + Volume_fetta;
