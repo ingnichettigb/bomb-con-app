@@ -48,7 +48,7 @@ export default function App() {
       }
     }
     return {
-      ditta: 'Bomb-Bomb Engineering S.r.l.',
+      ditta: 'BOMB-CON Engineering S.r.l.',
       partitaIva: 'IT09876543210',
       telefono: '+39 0373 123456',
       email: 'collaudi@bombbomb-engineering.it',
@@ -1214,10 +1214,10 @@ export default function App() {
           {/* Small Footer metadata for pages */}
           <div className="pt-4 flex justify-between items-center text-[8px] font-mono text-neutral-400">
             <span>
-              {lang === 'en' ? 'Generated via Bomb-Bomb Calibration SaaS v1.2' :
-               lang === 'es' ? 'Generado mediante Bomb-Bomb Calibration SaaS v1.2' :
-               lang === 'de' ? 'Generiert über Bomb-Bomb Calibration SaaS v1.2' :
-               'Generato tramite Bomb-Bomb Calibration SaaS v1.2'}
+              {lang === 'en' ? 'Generated via BOMB-CON TARATURA v1.2' :
+               lang === 'es' ? 'Generado mediante BOMB-CON TARATURA v1.2' :
+               lang === 'de' ? 'Generiert über BOMB-CON TARATURA v1.2' :
+               'Generato tramite BOMB-CON TARATURA v1.2'}
             </span>
             <span>
               {lang === 'en' ? `Report: ${reportNumber} • Page 2 of 2` :

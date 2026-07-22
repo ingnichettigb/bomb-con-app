@@ -146,7 +146,7 @@ export interface TranslationDict {
 
 export const translations: Record<Language, TranslationDict> = {
   it: {
-    appName: "Bomb-Bomb Calibration SaaS",
+    appName: "BOMB-CON TARATURA",
     appSub: "v1.2 (EXCEL 01 COMPATIBLE)",
     appTeaser: "Taratura millimetrica professionale per serbatoi cilindrici con doppie testate bombate standard o custom",
     active: "ATTIVO",
@@ -275,7 +275,7 @@ export const translations: Record<Language, TranslationDict> = {
     printStamp: "Timbro della Ditta"
   },
   en: {
-    appName: "Bomb-Bomb Calibration SaaS",
+    appName: "BOMB-CON TARATURA",
     appSub: "v1.2 (EXCEL 01 COMPATIBLE)",
     appTeaser: "Professional millimeter-by-millimeter calibration for cylindrical tanks with standard or custom heads",
     active: "ACTIVE",
@@ -404,7 +404,7 @@ export const translations: Record<Language, TranslationDict> = {
     printStamp: "Company Stamp"
   },
   es: {
-    appName: "Bomb-Bomb Calibration SaaS",
+    appName: "BOMB-CON TARATURA",
     appSub: "v1.2 (COMPATIBLE CON EXCEL 01)",
     appTeaser: "Calibración milimétrica profesional para tanques cilíndricos con extremos curvados estándar o personalizados",
     active: "ACTIVO",
@@ -533,7 +533,7 @@ export const translations: Record<Language, TranslationDict> = {
     printStamp: "Sello de la Empresa"
   },
   de: {
-    appName: "Bomb-Bomb Calibration SaaS",
+    appName: "BOMB-CON TARATURA",
     appSub: "v1.2 (EXCEL 01 KOMPATIBEL)",
     appTeaser: "Professionelle millimetergenaue Kalibrierung für zylindrische Tanks mit Standard- oder kundenspezifischen Klöpperböden",
     active: "AKTIV",
