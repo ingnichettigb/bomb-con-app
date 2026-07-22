@@ -331,30 +331,8 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-neutral-950 pb-2 border-b border-neutral-200 flex items-center gap-1.5">
               <Layers className="w-4 h-4 text-emerald-800" />
-              Geometria Testa del Coperchio
+              Geometria Coperchio Bombato
             </h3>
-
-            {/* Sync Toggle */}
-            <div className="p-3.5 bg-emerald-50/50 rounded-xl border-2 border-emerald-300/40 flex items-center justify-between gap-4">
-              <div className="flex items-start gap-2.5">
-                <RefreshCw className={`w-4 h-4 text-emerald-800 mt-0.5 ${coperchioUgualeAlFondo ? 'animate-spin-slow' : ''}`} />
-                <div>
-                  <span className="text-xs font-bold text-neutral-950 block">Coperchio Uguale al Fondo</span>
-                  <span className="text-[10px] text-neutral-700 block leading-tight font-medium">
-                    Sincronizza automaticamente tipo, spessore e parametri geometrici del coperchio con il fondo.
-                  </span>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={coperchioUgualeAlFondo}
-                  onChange={(e) => setCoperchioUgualeAlFondo(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-850"></div>
-              </label>
-            </div>
 
             <div>
               <label className="block text-xs font-bold text-neutral-900 mb-2 flex items-center gap-1.5 uppercase tracking-wide">
