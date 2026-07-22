@@ -103,10 +103,10 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
       lCil: lCil || 2000,
       rho: rho || 1,
       fondo: {
-        type: fondoType,
+        type: 'conico',
         sp: fondoSp || 5,
         hColletto: fondoColletto || 25,
-        ...(fondoType === 'custom' ? { R_custom: fondoRCustom, r_custom: fondoRCustomVal } : {})
+        hCono: fondoHCono || Math.round((dInt || 1000) / 2),
       },
       coperchio: {
         type: coperchioType,
