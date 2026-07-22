@@ -1,0 +1,228 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { TankInput, HeadConfig, HeadCalculated, CalculationResult } from '../types';
+
+/**
+ * Calculates geometry and volumes for a single head (coperchio or fondo)
+ */
+export function calculateHead(dInt: number, config: HeadConfig): HeadCalculated {
+  let R = 0;
+  let r = 0;
+
+  if (config.type === 'decinormale') {
+    R = dInt;
+    r = dInt / 10;
+  } else if (config.type === 'pseudoellittico') {
+    R = 0.833 * dInt;
+    r = 0.156 * dInt;
+  } else {
+    R = config.R_custom ?? dInt;
+    r = config.r_custom ?? (dInt / 10);
+  }
+
+  const DR = R - r;
+  const X = dInt / 2 - r;
+
+  // Guard against division by zero or out of bounds for ASIN
+  let sinVal = DR !== 0 ? (X / DR) : 0;
+  if (sinVal > 1) sinVal = 1;
+  if (sinVal < -1) sinVal = -1;
+
+  const alfa = Math.asin(sinVal) * 180 / Math.PI;
+  const beta = 90 - alfa;
+
+  // H1 = SQRT(DR^2 - X^2)
+  let diffSq = DR * DR - X * X;
+  if (diffSq < 0) diffSq = 0;
+  const H1 = Math.sqrt(diffSq);
+
+  const H_int = R - H1; // altezza interna totale della calotta+raccordo
+  const alfaRad = alfa * Math.PI / 180;
+  const betaRad = beta * Math.PI / 180;
+
+  const H2 = r * Math.cos(alfaRad); // altezza verticale zona toroidale
+  const H3 = H_int - H2;            // altezza verticale calotta sferica
+  const Y = R * Math.sin(alfaRad);
+
+  // Baricentro del toro (Pappo-Guldino)
+  // formula: r*2*2*r*SIN(beta/2*PI()/180) / (r*2*PI()/360*beta*3) * COS(beta/2*PI()/180) + X
+  let Baric = X;
+  if (beta !== 0 && r !== 0) {
+    const denom = (r * 2 * Math.PI / 360 * beta * 3);
+    if (denom !== 0) {
+      Baric = ((r * 2 * 2 * r * Math.sin(betaRad / 2)) / denom) * Math.cos(betaRad / 2) + X;
+    }
+  }
+
+  const K = dInt / 2 - Y;
+  const H_esterna_totale = R - H1 + config.hColletto + config.sp;
+
+  // Volumi (mm come unità di input, risultato in LITRI: si divide per 1.000.000)
+  const V_calotta = 0.523598775 * H3 * (3 * Y * Y + H3 * H3) / 1e6;
+  const V_toro = 1.04719 * H2 * (Y * Y + X * X + Y * X) / 1e6;
+  const V_raccordo = r * r * Math.PI / 360 * (90 - alfa) * Baric * 2 * Math.PI / 1e6;
+  const V_colletto = Math.pow(dInt / 2, 2) * Math.PI * config.hColletto / 1e6;
+  const V_testata_LT = V_calotta + V_toro + V_raccordo + V_colletto;
+
+  // Sviluppo lamiera (per il taglio del disco grezzo)
+  const Sviluppo_mm = (R * 2 + config.sp) * Math.PI / 360 * alfa * 2 + (r * 2 + config.sp) * Math.PI / 360 * beta * 2 + config.hColletto * 2;
+  const Area_disco_da_tagliare_mq = Math.pow(Sviluppo_mm / 2000, 2) * Math.PI;
+  const Peso_lamiera_kg = Area_disco_da_tagliare_mq * config.sp * 8; // 8 = densità acciaio
+
+  return {
+    R,
+    r,
+    DR,
+    X,
+    alfa,
+    beta,
+    H1,
+    H_int,
+    H2,
+    H3,
+    Y,
+    Baric,
+    K,
+    H_esterna_totale,
+    V_calotta,
+    V_toro,
+    V_raccordo,
+    V_colletto,
+    V_testata_LT,
+    Sviluppo_mm,
+    Area_disco_da_tagliare_mq,
+    Peso_lamiera_kg,
+  };
+}
+
+/**
+ * Perform full tank profile integration and strapping table calculations
+ */
+export function calculateTank(input: TankInput): CalculationResult {
+  const dInt = input.dInt;
+  const lCil = input.lCil;
+  const rho = input.rho;
+
+  // Compute coperchio and fondo geometries
+  const fondo = calculateHead(dInt, input.fondo);
+  const coperchio = calculateHead(dInt, input.coperchio);
+
+  // Altezze zone
+  const H3_fondo = fondo.H3;
+  const H2_fondo = fondo.H2;
+  const h_colletto_fondo = input.fondo.hColletto;
+  const H3_coperchio = coperchio.H3;
+  const H2_coperchio = coperchio.H2;
+  const h_colletto_coperchio = input.coperchio.hColletto;
+
+  // Altezze cumulative (quote, in mm, misurate dal fondo = 0)
+  const z1 = H3_fondo;
+  const z2 = z1 + H2_fondo;
+  const z3 = z2 + h_colletto_fondo;
+  const z4 = z3 + lCil;
+  const z5 = z4 + h_colletto_coperchio;
+  const z6 = z5 + H2_coperchio;
+  const z7 = z6 + H3_coperchio; // H_tot
+  
+  const H_tot = Math.round(z7);
+
+  // Precalculare raggio_fine_zona1 e costanti zona 2
+  const raggio_fine_zona1 = Math.sqrt(H3_fondo * (2 * fondo.R - H3_fondo));
+  const BH_fondo = (raggio_fine_zona1 - fondo.X) * 2;
+  let termSqFondo = fondo.r * fondo.r - Math.pow(BH_fondo / 2, 2);
+  if (termSqFondo < 0) termSqFondo = 0;
+  const BI_fondo = fondo.r - Math.sqrt(termSqFondo);
+
+  // Array to hold values for each height mm (0-indexed to H_tot)
+  const raggioProfile = new Array<number>(H_tot + 1).fill(0);
+  const litriCumulativi = new Array<number>(H_tot + 1).fill(0);
+
+  // Calculate radius for each h (1 mm to H_tot mm)
+  for (let h = 1; h <= H_tot; h++) {
+    let rVal = 0;
+
+    if (h <= z1) {
+      // Zona 1 — calotta sferica fondo
+      const h_zona = h;
+      let term = h_zona * (2 * fondo.R - h_zona);
+      if (term < 0) term = 0;
+      rVal = Math.sqrt(term);
+    } else if (h <= z2) {
+      // Zona 2 — raccordo toroidale fondo
+      const h_zona = h - z1;
+      const BJ = BI_fondo + h_zona;
+      let term = BJ * (2 * fondo.r - BJ);
+      if (term < 0) term = 0;
+      rVal = Math.sqrt(term) + fondo.X;
+    } else if (h <= z5) {
+      // Zone 3, 4, 5 — colletti e parte cilindrica
+      rVal = dInt / 2;
+    } else if (h <= z6) {
+      // Zona 6 — raccordo toroidale coperchio (mirror zona 2)
+      const h_zona = h - z5;
+      const BL = coperchio.r - h_zona + 1;
+      let term = BL * (2 * coperchio.r - BL);
+      if (term < 0) term = 0;
+      const BM = Math.sqrt(term);
+      rVal = (dInt / 2 - coperchio.r) + BM;
+    } else {
+      // Zona 7 — calotta sferica coperchio (mirror zona 1)
+      const h_zona = h - z6;
+      const BN = H3_coperchio - h_zona;
+      let term = BN * (2 * coperchio.R - BN);
+      if (term < 0) term = 0;
+      rVal = Math.sqrt(term);
+    }
+
+    raggioProfile[h] = rVal;
+
+    // Volume of this 1mm slice in liters
+    const Area_sezione = Math.PI * rVal * rVal;
+    const Volume_fetta = Area_sezione * 1 / 1e6;
+    litriCumulativi[h] = litriCumulativi[h - 1] + Volume_fetta;
+  }
+
+  // Summary Volumes
+  const volumeFondo = fondo.V_testata_LT;
+  const volumeCoperchio = coperchio.V_testata_LT;
+  const volumeCilindro = Math.PI * Math.pow(dInt / 2, 2) * lCil / 1e6;
+  const volumeTotale = litriCumulativi[H_tot];
+
+  // Weights and surfaces
+  const pesoLamieraFondo = fondo.Peso_lamiera_kg;
+  const pesoLamieraCoperchio = coperchio.Peso_lamiera_kg;
+  const sviluppoFondoMq = fondo.Area_disco_da_tagliare_mq;
+  const sviluppoCoperchioMq = coperchio.Area_disco_da_tagliare_mq;
+
+  const pesoContenutoTotale = volumeTotale * rho;
+  const pesoContenutoPerCmCilindro = (Math.PI * Math.pow(dInt / 2, 2) * 10 / 1e6) * rho; // 10 mm = 1 cm
+
+  return {
+    input,
+    fondo,
+    coperchio,
+    z1,
+    z2,
+    z3,
+    z4,
+    z5,
+    z6,
+    z7,
+    H_tot,
+    volumeFondo,
+    volumeCoperchio,
+    volumeCilindro,
+    volumeTotale,
+    pesoLamieraFondo,
+    pesoLamieraCoperchio,
+    sviluppoFondoMq,
+    sviluppoCoperchioMq,
+    pesoContenutoTotale,
+    pesoContenutoPerCmCilindro,
+    litriCumulativi,
+    raggioProfile,
+  };
+}
