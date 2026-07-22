@@ -26,32 +26,27 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
   // Spin animation trigger count
   const [spinCount, setSpinCount] = useState<number>(0);
 
-  // Fondo State
-  const [fondoType, setFondoType] = useState<HeadType>(initialInput.fondo.type);
+  // Fondo State (sempre CONICO)
   const [fondoSp, setFondoSp] = useState<number>(initialInput.fondo.sp);
   const [fondoColletto, setFondoColletto] = useState<number>(initialInput.fondo.hColletto);
-  const [fondoRCustom, setFondoRCustom] = useState<number>(initialInput.fondo.R_custom ?? initialInput.dInt);
-  const [fondoRCustomVal, setFondoRCustomVal] = useState<number>(initialInput.fondo.r_custom ?? (initialInput.dInt / 10));
+  const [fondoHCono, setFondoHCono] = useState<number>(initialInput.fondo.hCono ?? Math.round(initialInput.dInt / 2));
   const [fondoCollettoConfirmed, setFondoCollettoConfirmed] = useState<boolean>(true);
+  // Costante: fondo sempre conico
+  const fondoType: HeadType = 'conico';
+  const fondoRCustom = 0;
+  const fondoRCustomVal = 0;
 
-  // Coperchio State
-  const [coperchioType, setCoperchioType] = useState<HeadType>(initialInput.coperchio.type);
+  // Coperchio State (sempre BOMBATO)
+  const [coperchioType, setCoperchioType] = useState<HeadType>(
+    initialInput.coperchio.type === 'conico' ? 'pseudoellittico' : initialInput.coperchio.type
+  );
   const [coperchioSp, setCoperchioSp] = useState<number>(initialInput.coperchio.sp);
   const [coperchioColletto, setCoperchioColletto] = useState<number>(initialInput.coperchio.hColletto);
   const [coperchioRCustom, setCoperchioRCustom] = useState<number>(initialInput.coperchio.R_custom ?? initialInput.dInt);
   const [coperchioRCustomVal, setCoperchioRCustomVal] = useState<number>(initialInput.coperchio.r_custom ?? (initialInput.dInt / 10));
   const [coperchioCollettoConfirmed, setCoperchioCollettoConfirmed] = useState<boolean>(true);
-  const [coperchioUgualeAlFondo, setCoperchioUgualeAlFondo] = useState<boolean>(() => {
-    return (
-      initialInput.fondo.type === initialInput.coperchio.type &&
-      initialInput.fondo.sp === initialInput.coperchio.sp &&
-      initialInput.fondo.hColletto === initialInput.coperchio.hColletto &&
-      (initialInput.fondo.type !== 'custom' || (
-        (initialInput.fondo.R_custom ?? initialInput.dInt) === (initialInput.coperchio.R_custom ?? initialInput.dInt) &&
-        (initialInput.fondo.r_custom ?? (initialInput.dInt / 10)) === (initialInput.coperchio.r_custom ?? (initialInput.dInt / 10))
-      ))
-    );
-  });
+  const coperchioUgualeAlFondo = false;
+  const setCoperchioUgualeAlFondo = (_: boolean) => {};
 
   // Report Meta State
   const [cliente, setCliente] = useState(initialInput.report.cliente);
