@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type HeadType = 'decinormale' | 'pseudoellittico' | 'custom';
+export type HeadType = 'decinormale' | 'pseudoellittico' | 'custom' | 'conico';
 
 export interface HeadConfig {
   type: HeadType;
@@ -11,6 +11,7 @@ export interface HeadConfig {
   hColletto: number;  // altezza colletto (mm)
   R_custom?: number;  // raggio bombatura custom (mm)
   r_custom?: number;  // raggio raccordo custom (mm)
+  hCono?: number;     // altezza cono (mm) — solo per type='conico'
 }
 
 export interface ReportMeta {
