@@ -264,7 +264,12 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-neutral-950 pb-2 border-b border-neutral-200 flex items-center gap-1.5">
               <Layers className="w-4 h-4 text-emerald-800" />
-              Geometria Testa del Fondo
+              Geometria Fondo Conico
+            </h3>
+
+            <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-lg text-[11px] text-emerald-950 font-medium">
+              Il fondo è un <strong>cono retto</strong> con vertice rivolto verso il basso. Definire l'altezza del cono (dalla base cilindrica al vertice).
+            </div>
             </h3>
 
             <div>
