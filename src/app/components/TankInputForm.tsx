@@ -264,6 +264,12 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
               <Settings2 className="w-4 h-4 text-emerald-800" />
               Dimensioni Generali Serbatoio
             </h3>
+
+            <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-lg flex items-start gap-2 text-[11px] text-amber-900">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
+              <span><strong>Tutte le misure da inserire</strong> (diametro, altezza, ecc.) sono <strong>misure interne</strong>. Non inserire le misure esterne.</span>
+            </div>
+            
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
