@@ -496,6 +496,12 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
               Geometria Coperchio Bombato
             </h3>
 
+            <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-lg flex items-start gap-2 text-[11px] text-amber-900">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
+              <span><strong>Tutte le misure da inserire</strong> (diametro, altezza, ecc.) sono <strong>misure interne</strong>. Non inserire le misure esterne.</span>
+            </div>
+
+
             <div>
               <label className="block text-xs font-bold text-neutral-900 mb-2 flex items-center gap-1.5 uppercase tracking-wide">
                 Tipologia Testa Coperchio
