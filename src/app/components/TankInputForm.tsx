@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TankInput, HeadType, HeadConfig, ReportMeta } from '../types';
-import { Settings2, ShieldCheck, HelpCircle, Layers, Check, RefreshCw } from 'lucide-react';
+import { Settings2, ShieldCheck, HelpCircle, Layers, Check, RefreshCw, RotateCcw, Info, AlertTriangle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Language, translations } from '../utils/translations';
+
 
 interface TankInputFormProps {
   key?: React.Key | number;
