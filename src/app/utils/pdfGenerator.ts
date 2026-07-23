@@ -448,7 +448,7 @@ export async function generateCalibrationPDF(
     doc.text(labelMid, 158, y_mid + 0.8, { align: 'right' });
 
     // Bottom Head pointer & text
-    const y_bot = y_c + h_c + dome_h / 2;
+    const y_bot = y_c + h_c + dome_h + 1.5;
     doc.setDrawColor(209, 213, 219);
     doc.setLineWidth(0.15);
     doc.line(160, y_bot, 173, y_bot);
