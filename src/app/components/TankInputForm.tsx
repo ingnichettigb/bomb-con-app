@@ -31,7 +31,16 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
   const [fondoSp, setFondoSp] = useState<number>(initialInput.fondo.sp);
   const [fondoColletto, setFondoColletto] = useState<number>(initialInput.fondo.hColletto);
   const [fondoHCono, setFondoHCono] = useState<number>(initialInput.fondo.hCono ?? Math.round(initialInput.dInt / 2));
+  const [fondoAngolo, setFondoAngolo] = useState<number | null>(() => {
+    const r = initialInput.dInt / 2;
+    const h = initialInput.fondo.hCono ?? Math.round(r);
+    return r > 0 ? Math.round(Math.atan(h / r) * (180 / Math.PI) * 100) / 100 : null;
+  });
+  // lockedBy: 'h' means user typed altezza → angle is derived/disabled; 'angolo' means user typed angolo → altezza derived/disabled
+  const [lockedBy, setLockedBy] = useState<'h' | 'angolo' | null>('h');
+  const [showAngleHelp, setShowAngleHelp] = useState<boolean>(false);
   const [fondoCollettoConfirmed, setFondoCollettoConfirmed] = useState<boolean>(true);
+
   // Costante: fondo sempre conico
   const fondoType: HeadType = 'conico';
   const fondoRCustom = 0;
