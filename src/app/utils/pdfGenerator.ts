@@ -424,7 +424,7 @@ export async function generateCalibrationPDF(
     // 5. Draw text labels and indicator lines
     const labelTop = lang === 'en' ? 'Top Head' : lang === 'es' ? 'Cúpula Sup.' : lang === 'de' ? 'Obere Kuppe' : 'Coperchio';
     const labelMid = lang === 'en' ? 'Cylinder' : lang === 'es' ? 'Cuerpo Cil.' : lang === 'de' ? 'Zylinder' : 'Mantello';
-    const labelBot = lang === 'en' ? 'Bottom Head' : lang === 'es' ? 'Cúpula Inf.' : lang === 'de' ? 'Unterer Boden' : 'Fondo';
+    const labelBot = lang === 'en' ? 'Conical Bottom' : lang === 'es' ? 'Fondo Cónico' : lang === 'de' ? 'Konischer Boden' : 'Fondo Conico';
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.5);
