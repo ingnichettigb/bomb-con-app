@@ -89,6 +89,66 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
     }
   }, [coperchioUgualeAlFondo, fondoType, fondoSp, fondoColletto, fondoRCustom, fondoRCustomVal]);
 
+  // Recalcolo automatico del campo DERIVATO quando D_int cambia
+  useEffect(() => {
+    const r = dInt / 2;
+    if (r <= 0) return;
+    if (lockedBy === 'h') {
+      // altezza è manuale → ricalcola angolo
+      const ang = Math.atan(fondoHCono / r) * (180 / Math.PI);
+      setFondoAngolo(Math.round(ang * 100) / 100);
+    } else if (lockedBy === 'angolo' && fondoAngolo != null) {
+      const h = r * Math.tan(fondoAngolo * Math.PI / 180);
+      setFondoHCono(Math.max(1, Math.round(h)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dInt]);
+
+  const handleFondoHConoChange = (raw: string) => {
+    if (raw === '') {
+      setLockedBy(null);
+      setFondoHCono(0);
+      setFondoAngolo(null);
+      return;
+    }
+    const val = Math.max(1, parseInt(raw) || 0);
+    setFondoHCono(val);
+    setLockedBy('h');
+    const r = dInt / 2;
+    if (r > 0) {
+      const ang = Math.atan(val / r) * (180 / Math.PI);
+      setFondoAngolo(Math.round(ang * 100) / 100);
+    } else {
+      setFondoAngolo(null);
+    }
+  };
+
+  const handleFondoAngoloChange = (raw: string) => {
+    if (raw === '') {
+      setLockedBy(null);
+      setFondoAngolo(null);
+      return;
+    }
+    let val = parseFloat(raw);
+    if (isNaN(val)) return;
+    if (val <= 0) val = 0.01;
+    if (val >= 90) val = 89.99;
+    setFondoAngolo(Math.round(val * 100) / 100);
+    setLockedBy('angolo');
+    const r = dInt / 2;
+    if (r > 0) {
+      const h = r * Math.tan(val * Math.PI / 180);
+      setFondoHCono(Math.max(1, Math.round(h)));
+    }
+  };
+
+  const resetFondoConoFields = () => {
+    setLockedBy(null);
+    setFondoHCono(0);
+    setFondoAngolo(null);
+  };
+
+
   // Effect to handle automatic proposal of colletto height when spessore changes
   const handleFondoSpChange = (val: number) => {
     setFondoSp(val);
