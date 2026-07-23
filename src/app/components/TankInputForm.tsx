@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TankInput, HeadType, HeadConfig, ReportMeta } from '../types';
-import { Settings2, ShieldCheck, HelpCircle, Layers, Check, RefreshCw } from 'lucide-react';
+import { Settings2, ShieldCheck, HelpCircle, Layers, Check, RefreshCw, RotateCcw, Info, AlertTriangle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Language, translations } from '../utils/translations';
+
 
 interface TankInputFormProps {
   key?: React.Key | number;
@@ -30,7 +31,16 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
   const [fondoSp, setFondoSp] = useState<number>(initialInput.fondo.sp);
   const [fondoColletto, setFondoColletto] = useState<number>(initialInput.fondo.hColletto);
   const [fondoHCono, setFondoHCono] = useState<number>(initialInput.fondo.hCono ?? Math.round(initialInput.dInt / 2));
+  const [fondoAngolo, setFondoAngolo] = useState<number | null>(() => {
+    const r = initialInput.dInt / 2;
+    const h = initialInput.fondo.hCono ?? Math.round(r);
+    return r > 0 ? Math.round(Math.atan(h / r) * (180 / Math.PI) * 100) / 100 : null;
+  });
+  // lockedBy: 'h' means user typed altezza → angle is derived/disabled; 'angolo' means user typed angolo → altezza derived/disabled
+  const [lockedBy, setLockedBy] = useState<'h' | 'angolo' | null>('h');
+  const [showAngleHelp, setShowAngleHelp] = useState<boolean>(false);
   const [fondoCollettoConfirmed, setFondoCollettoConfirmed] = useState<boolean>(true);
+
   // Costante: fondo sempre conico
   const fondoType: HeadType = 'conico';
   const fondoRCustom = 0;
@@ -78,6 +88,66 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
       setCoperchioCollettoConfirmed(true);
     }
   }, [coperchioUgualeAlFondo, fondoType, fondoSp, fondoColletto, fondoRCustom, fondoRCustomVal]);
+
+  // Recalcolo automatico del campo DERIVATO quando D_int cambia
+  useEffect(() => {
+    const r = dInt / 2;
+    if (r <= 0) return;
+    if (lockedBy === 'h') {
+      // altezza è manuale → ricalcola angolo
+      const ang = Math.atan(fondoHCono / r) * (180 / Math.PI);
+      setFondoAngolo(Math.round(ang * 100) / 100);
+    } else if (lockedBy === 'angolo' && fondoAngolo != null) {
+      const h = r * Math.tan(fondoAngolo * Math.PI / 180);
+      setFondoHCono(Math.max(1, Math.round(h)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dInt]);
+
+  const handleFondoHConoChange = (raw: string) => {
+    if (raw === '') {
+      setLockedBy(null);
+      setFondoHCono(0);
+      setFondoAngolo(null);
+      return;
+    }
+    const val = Math.max(1, parseInt(raw) || 0);
+    setFondoHCono(val);
+    setLockedBy('h');
+    const r = dInt / 2;
+    if (r > 0) {
+      const ang = Math.atan(val / r) * (180 / Math.PI);
+      setFondoAngolo(Math.round(ang * 100) / 100);
+    } else {
+      setFondoAngolo(null);
+    }
+  };
+
+  const handleFondoAngoloChange = (raw: string) => {
+    if (raw === '') {
+      setLockedBy(null);
+      setFondoAngolo(null);
+      return;
+    }
+    let val = parseFloat(raw);
+    if (isNaN(val)) return;
+    if (val <= 0) val = 0.01;
+    if (val >= 90) val = 89.99;
+    setFondoAngolo(Math.round(val * 100) / 100);
+    setLockedBy('angolo');
+    const r = dInt / 2;
+    if (r > 0) {
+      const h = r * Math.tan(val * Math.PI / 180);
+      setFondoHCono(Math.max(1, Math.round(h)));
+    }
+  };
+
+  const resetFondoConoFields = () => {
+    setLockedBy(null);
+    setFondoHCono(0);
+    setFondoAngolo(null);
+  };
+
 
   // Effect to handle automatic proposal of colletto height when spessore changes
   const handleFondoSpChange = (val: number) => {
@@ -194,6 +264,12 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
               <Settings2 className="w-4 h-4 text-emerald-800" />
               Dimensioni Generali Serbatoio
             </h3>
+
+            <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-lg flex items-start gap-2 text-[11px] text-amber-900">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
+              <span><strong>Tutte le misure da inserire</strong> (diametro, altezza, ecc.) sono <strong>misure interne</strong>. Non inserire le misure esterne.</span>
+            </div>
+            
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -271,22 +347,108 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
               Il fondo è un <strong>cono retto</strong> con vertice rivolto verso il basso. Definire l'altezza del cono (dalla base cilindrica al vertice).
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-neutral-900 mb-1 flex items-center gap-1 uppercase tracking-wide">
-                Altezza Cono (h_cono)
-                <span className="text-[10px] text-neutral-700 font-bold">(mm)</span>
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="10000"
-                required
-                value={fondoHCono || ''}
-                onChange={(e) => setFondoHCono(Math.max(1, parseInt(e.target.value) || 0))}
-                className="w-full text-sm bg-[#d7ecd7]/80 border-2 border-emerald-300/80 rounded-lg px-3 py-2 text-emerald-950 font-bold focus:bg-[#cde9cd] focus:ring-2 focus:ring-emerald-800 focus:outline-hidden transition-colors"
-              />
-              <span className="text-[10px] text-neutral-600 mt-1 block">Altezza verticale dal piano di attacco al vertice del cono.</span>
+            <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-lg flex items-start gap-2 text-[11px] text-amber-900">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
+              <span><strong>Tutte le misure da inserire</strong> (diametro, altezza, ecc.) sono <strong>misure interne</strong>. Non inserire le misure esterne.</span>
             </div>
+
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-neutral-900 uppercase tracking-wide">Geometria Cono</span>
+                <button
+                  type="button"
+                  onClick={() => setShowAngleHelp((v) => !v)}
+                  className="text-emerald-700 hover:text-emerald-900 cursor-pointer"
+                  title="Come è misurato l'angolo?"
+                  aria-label="Info angolo cono"
+                >
+                  <Info className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={resetFondoConoFields}
+                className="flex items-center gap-1 text-[10px] font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-md px-2 py-1 transition-colors cursor-pointer"
+                title="Sblocca entrambi i campi"
+              >
+                <RotateCcw className="w-3 h-3" /> Reset
+              </button>
+            </div>
+
+            {showAngleHelp && (
+              <div className="p-3 bg-white border border-emerald-300 rounded-lg flex items-start gap-3 animate-fade-in">
+                <svg viewBox="0 0 120 90" className="w-28 h-20 shrink-0">
+                  {/* base cilindrica orizzontale */}
+                  <line x1="10" y1="20" x2="110" y2="20" stroke="#065f46" strokeWidth="2" />
+                  <line x1="10" y1="20" x2="10" y2="10" stroke="#94a3b8" strokeDasharray="2 2" />
+                  <line x1="110" y1="20" x2="110" y2="10" stroke="#94a3b8" strokeDasharray="2 2" />
+                  {/* parete obliqua del cono → vertice in basso al centro */}
+                  <line x1="10" y1="20" x2="60" y2="80" stroke="#065f46" strokeWidth="2" />
+                  <line x1="110" y1="20" x2="60" y2="80" stroke="#065f46" strokeWidth="2" />
+                  {/* arco angolo tra base orizzontale e parete obliqua */}
+                  <path d="M 30 20 A 20 20 0 0 0 22 32" fill="none" stroke="#dc2626" strokeWidth="1.5" />
+                  <text x="34" y="34" fontSize="9" fill="#dc2626" fontWeight="bold">α</text>
+                  <text x="55" y="16" fontSize="7" fill="#334155">base D_int</text>
+                </svg>
+                <div className="text-[11px] text-neutral-800 leading-snug">
+                  L'angolo <strong>α</strong> è misurato tra la <strong>linea orizzontale della base cilindrica</strong> e la <strong>parete obliqua del cono</strong>, nel punto di attacco.
+                  <br />Non è l'angolo rispetto all'asse verticale.
+                  <br /><em>α = atan(h_cono / (D_int / 2))</em>
+                </div>
+              </div>
+            )}
+
+            {dInt <= 0 && (
+              <div className="p-2.5 bg-sky-50 border border-sky-300 rounded-lg text-[11px] text-sky-900">
+                Inserisci prima il diametro interno nella tab <strong>Dimensioni</strong> per calcolare l'angolo.
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-neutral-900 mb-1 flex items-center gap-1 uppercase tracking-wide">
+                  Altezza Cono (h_cono)
+                  <span className="text-[10px] text-neutral-700 font-bold">(mm)</span>
+                  {lockedBy === 'angolo' && <span className="text-[9px] bg-neutral-200 text-neutral-700 px-1 py-0.5 rounded font-bold">CALCOLATO</span>}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10000"
+                  disabled={lockedBy === 'angolo'}
+                  value={fondoHCono || ''}
+                  onChange={(e) => handleFondoHConoChange(e.target.value)}
+                  className={`w-full text-sm border-2 rounded-lg px-3 py-2 font-bold focus:ring-2 focus:ring-emerald-800 focus:outline-hidden transition-colors ${
+                    lockedBy === 'angolo'
+                      ? 'bg-neutral-100 text-neutral-500 border-neutral-300 cursor-not-allowed'
+                      : 'bg-[#d7ecd7]/80 border-emerald-300/80 text-emerald-950 focus:bg-[#cde9cd]'
+                  }`}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-neutral-900 mb-1 flex items-center gap-1 uppercase tracking-wide">
+                  Gradi di Inclinazione
+                  <span className="text-[10px] text-neutral-700 font-bold">(°)</span>
+                  {lockedBy === 'h' && <span className="text-[9px] bg-neutral-200 text-neutral-700 px-1 py-0.5 rounded font-bold">CALCOLATO</span>}
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max="89.99"
+                  disabled={lockedBy === 'h' || dInt <= 0}
+                  value={fondoAngolo ?? ''}
+                  onChange={(e) => handleFondoAngoloChange(e.target.value)}
+                  className={`w-full text-sm border-2 rounded-lg px-3 py-2 font-bold focus:ring-2 focus:ring-emerald-800 focus:outline-hidden transition-colors ${
+                    lockedBy === 'h' || dInt <= 0
+                      ? 'bg-neutral-100 text-neutral-500 border-neutral-300 cursor-not-allowed'
+                      : 'bg-[#d7ecd7]/80 border-emerald-300/80 text-emerald-950 focus:bg-[#cde9cd]'
+                  }`}
+                />
+              </div>
+            </div>
+            <span className="text-[10px] text-neutral-600 block">Angolo tra la base orizzontale e la parete obliqua del cono (α = atan(h_cono / (D_int/2))).</span>
+
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -333,6 +495,12 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
               <Layers className="w-4 h-4 text-emerald-800" />
               Geometria Coperchio Bombato
             </h3>
+
+            <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-lg flex items-start gap-2 text-[11px] text-amber-900">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600" />
+              <span><strong>Tutte le misure da inserire</strong> (diametro, altezza, ecc.) sono <strong>misure interne</strong>. Non inserire le misure esterne.</span>
+            </div>
+
 
             <div>
               <label className="block text-xs font-bold text-neutral-900 mb-2 flex items-center gap-1.5 uppercase tracking-wide">
