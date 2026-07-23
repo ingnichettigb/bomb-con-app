@@ -330,7 +330,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
             <div className="p-3 bg-emerald-50/50 rounded-lg border border-emerald-200 flex items-start gap-2.5 text-xs text-neutral-800 mt-2">
               <HelpCircle className="w-4 h-4 text-emerald-800 shrink-0 mt-0.5" />
               <p className="font-medium">
-                Il serbatoio "Bomb-Bomb" è composto da un mantello cilindrico centrale e due teste bombate (fondo e coperchio) calcolate secondo il profilo torosferico prescelto.
+                Il serbatoio è composto da un mantello cilindrico centrale, un fondo conico e un coperchio bombato calcolato secondo il profilo torosferico prescelto.
               </p>
             </div>
           </div>

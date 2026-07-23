@@ -148,7 +148,7 @@ export const translations: Record<Language, TranslationDict> = {
   it: {
     appName: "BOMB-CON TARATURA",
     appSub: "v1.2 (EXCEL 01 COMPATIBLE)",
-    appTeaser: "Taratura millimetrica professionale per serbatoi cilindrici con doppie testate bombate standard o custom",
+    appTeaser: "Taratura millimetrica professionale per serbatoi cilindrici con fondo conico e coperchio bombato standard o custom",
     active: "ATTIVO",
     recalculate: "Ricalcola Taratura",
     calculate: "Calcola Taratura",
