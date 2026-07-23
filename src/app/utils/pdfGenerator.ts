@@ -100,7 +100,7 @@ export async function generateCalibrationPDF(
         
         // Volumes
         volumeTitle: 'Volumi dei Singoli Componenti',
-        bottomVolume: 'Volume Fondo Bombato:',
+        bottomVolume: 'Volume Fondo Conico:',
         cylinderVolume: 'Volume Mantello Cilindrico:',
         topVolume: 'Volume Coperchio Bombato:',
         totalVolume: 'VOLUME TOTALE NOMINALE:',
@@ -1001,7 +1001,7 @@ export async function generateCalibrationPDF(
 
       const emitText = `${labels[lang].emitted} ${result.input.report.data || new Date().toISOString().split('T')[0]}`;
       doc.text(emitText, 15, 287);
-      doc.text('Bomb-Bomb Calibration SaaS', 105, 287, { align: 'center' });
+      doc.text('BOMB-CON Taratura', 105, 287, { align: 'center' });
 
       const pageText = `${labels[lang].page} ${i} / ${totalPagesCount}`;
       doc.text(pageText, 195, 287, { align: 'right' });

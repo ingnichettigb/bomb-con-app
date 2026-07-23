@@ -473,7 +473,7 @@ export default function ResultsDashboard({ result, lang = 'it' }: ResultsDashboa
                 <div className="space-y-2 mt-3 text-xs text-neutral-800">
                   <div className="flex justify-between py-1 border-b border-neutral-200">
                     <span className="font-bold text-neutral-900">
-                      {lang === 'en' ? 'Bottom Head Volume:' : lang === 'es' ? 'Volumen del Extremo Inferior:' : lang === 'de' ? 'Volumen des unteren Bodens:' : 'Volume Fondo Bombato:'}
+                      {lang === 'en' ? 'Bottom Cone Volume:' : lang === 'es' ? 'Volumen del Fondo Cónico:' : lang === 'de' ? 'Volumen des Konusbodens:' : 'Volume Fondo Conico:'}
                     </span>
                     <span className="font-mono font-extrabold text-neutral-950">{formatNum(result.volumeFondo, 2)} {lang === 'en' ? 'liters' : lang === 'es' ? 'litros' : lang === 'de' ? 'Liter' : 'litri'}</span>
                   </div>
