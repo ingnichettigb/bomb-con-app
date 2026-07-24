@@ -88,7 +88,8 @@ export default function App() {
       type: 'conico',
       sp: 8,
       hColletto: 40,
-      hCono: 900, // altezza del cono retto inferiore
+      hCono: 900, // altezza totale (cono puro + raccordo)
+      rRaccordo: 30, // raccordo cono/colletto (mm)
     },
     coperchio: {
       type: 'pseudoellittico',
