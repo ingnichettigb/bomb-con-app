@@ -203,16 +203,16 @@ export function calculateTank(input: TankInput): CalculationResult {
   const isConicFondo = input.fondo.type === 'conico';
 
   // Altezze zone
-  const H3_fondo = fondo.H3; // per conico = hCono
-  const H2_fondo = isConicFondo ? 0 : fondo.H2;
+  const H3_fondo = fondo.H3; // per conico = H_cono puro (sotto il raccordo)
+  const H2_fondo = isConicFondo ? fondo.H2 : fondo.H2; // per conico = H_racc (raccordo)
   const h_colletto_fondo = input.fondo.hColletto;
   const H3_coperchio = coperchio.H3;
   const H2_coperchio = coperchio.H2;
   const h_colletto_coperchio = input.coperchio.hColletto;
 
   // Altezze cumulative (quote, in mm, misurate dal fondo = 0)
-  const z1 = H3_fondo;                       // fine cono (o calotta) fondo
-  const z2 = z1 + H2_fondo;                  // fine raccordo toroidale fondo (=z1 per conico)
+  const z1 = H3_fondo;                       // fine cono puro (o calotta) fondo
+  const z2 = z1 + H2_fondo;                  // fine raccordo (toroidale o cono/colletto)
   const z3 = z2 + h_colletto_fondo;          // fine colletto fondo
   const z4 = z3 + lCil;                      // fine mantello cilindrico
   const z5 = z4 + h_colletto_coperchio;      // fine colletto coperchio
@@ -221,8 +221,8 @@ export function calculateTank(input: TankInput): CalculationResult {
 
   const H_tot = Math.round(z7);
 
-  // Precalcolo costanti zona 2 (solo per fondo bombato)
-  const raggio_fine_zona1 = isConicFondo ? dInt / 2 : Math.sqrt(H3_fondo * (2 * fondo.R - H3_fondo));
+  // Precalcolo costanti zona 2 fondo bombato
+  const raggio_fine_zona1 = isConicFondo ? fondo.Y : Math.sqrt(H3_fondo * (2 * fondo.R - H3_fondo));
   const BH_fondo = isConicFondo ? 0 : (raggio_fine_zona1 - fondo.X) * 2;
   let termSqFondo = isConicFondo ? 0 : fondo.r * fondo.r - Math.pow(BH_fondo / 2, 2);
   if (termSqFondo < 0) termSqFondo = 0;
@@ -236,8 +236,8 @@ export function calculateTank(input: TankInput): CalculationResult {
 
     if (h <= z1) {
       if (isConicFondo) {
-        // Cono retto: raggio lineare da 0 (a h=0) fino a dInt/2 (a h=hCono)
-        rVal = (dInt / 2) * (h / H3_fondo);
+        // Cono retto puro: raggio lineare da 0 (a h=0) fino a Y (a h=H_cono)
+        rVal = H3_fondo > 0 ? fondo.Y * (h / H3_fondo) : 0;
       } else {
         // Zona 1 — calotta sferica fondo bombato
         const h_zona = h;
@@ -246,12 +246,25 @@ export function calculateTank(input: TankInput): CalculationResult {
         rVal = Math.sqrt(term);
       }
     } else if (h <= z2) {
-      // Zona 2 — raccordo toroidale fondo (skippato se conico, perché z1==z2)
-      const h_zona = h - z1;
-      const BJ = BI_fondo + h_zona;
-      let term = BJ * (2 * fondo.r - BJ);
-      if (term < 0) term = 0;
-      rVal = Math.sqrt(term) + fondo.X;
+      if (isConicFondo) {
+        // Zona 2 conica — raccordo cono/colletto (arco tangente).
+        // Centro arco: (R_base - r_racc, z2). Punto: (R_base - r_racc*(1-cos(phi)), z2 - r_racc*sin(phi))
+        const r_racc = fondo.r;
+        const R_base = dInt / 2;
+        const dh = z2 - h; // 0 in cima, H_racc in fondo
+        let sinPhi = r_racc > 0 ? dh / r_racc : 0;
+        if (sinPhi > 1) sinPhi = 1;
+        if (sinPhi < 0) sinPhi = 0;
+        const phi = Math.asin(sinPhi);
+        rVal = R_base - r_racc * (1 - Math.cos(phi));
+      } else {
+        // Zona 2 — raccordo toroidale fondo bombato
+        const h_zona = h - z1;
+        const BJ = BI_fondo + h_zona;
+        let term = BJ * (2 * fondo.r - BJ);
+        if (term < 0) term = 0;
+        rVal = Math.sqrt(term) + fondo.X;
+      }
     } else if (h <= z5) {
       // Zone 3, 4, 5 — colletti e parte cilindrica
       rVal = dInt / 2;
