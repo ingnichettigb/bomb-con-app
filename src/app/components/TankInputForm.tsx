@@ -121,26 +121,36 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
     }
   }, [coperchioUgualeAlFondo, fondoType, fondoSp, fondoColletto, fondoRCustom, fondoRCustomVal]);
 
-  // Recalcolo automatico del campo DERIVATO quando D_int cambia
+  // Recalcolo automatico del campo DERIVATO quando D_int o r_raccordo cambia
   useEffect(() => {
     const r = dInt / 2;
     if (r <= 0) return;
     if (lockedBy === 'h') {
-      // altezza è manuale → ricalcola angolo
-      const ang = Math.atan(fondoHCono / r) * (180 / Math.PI);
-      setFondoAngolo(Math.round(ang * 100) / 100);
+      const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo);
+      if (ang != null) {
+        setFondoAngolo(Math.round(ang * 100) / 100);
+        setRaccordoError(null);
+      } else {
+        setRaccordoError("Il raggio di raccordo inserito è troppo grande per questa combinazione di diametro e altezza.");
+      }
     } else if (lockedBy === 'angolo' && fondoAngolo != null) {
-      const h = r * Math.tan(fondoAngolo * Math.PI / 180);
-      setFondoHCono(Math.max(1, Math.round(h)));
+      const h = hTotFromAngle(fondoAngolo, r, fondoRRaccordo);
+      if (!isNaN(h)) {
+        setFondoHCono(Math.max(1, Math.round(h)));
+        setRaccordoError(null);
+      } else {
+        setRaccordoError("Il raggio di raccordo inserito è troppo grande per questa combinazione di diametro e angolo.");
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dInt]);
+  }, [dInt, fondoRRaccordo]);
 
   const handleFondoHConoChange = (raw: string) => {
     if (raw === '') {
       setLockedBy(null);
       setFondoHCono(0);
       setFondoAngolo(null);
+      setRaccordoError(null);
       return;
     }
     const val = Math.max(1, parseInt(raw) || 0);
@@ -148,8 +158,14 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
     setLockedBy('h');
     const r = dInt / 2;
     if (r > 0) {
-      const ang = Math.atan(val / r) * (180 / Math.PI);
-      setFondoAngolo(Math.round(ang * 100) / 100);
+      const ang = angleFromHTot(val, r, fondoRRaccordo);
+      if (ang != null) {
+        setFondoAngolo(Math.round(ang * 100) / 100);
+        setRaccordoError(null);
+      } else {
+        setFondoAngolo(null);
+        setRaccordoError("Il raggio di raccordo inserito è troppo grande per questa combinazione di diametro e altezza.");
+      }
     } else {
       setFondoAngolo(null);
     }
@@ -159,6 +175,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
     if (raw === '') {
       setLockedBy(null);
       setFondoAngolo(null);
+      setRaccordoError(null);
       return;
     }
     let val = parseFloat(raw);
@@ -169,8 +186,13 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
     setLockedBy('angolo');
     const r = dInt / 2;
     if (r > 0) {
-      const h = r * Math.tan(val * Math.PI / 180);
-      setFondoHCono(Math.max(1, Math.round(h)));
+      const h = hTotFromAngle(val, r, fondoRRaccordo);
+      if (!isNaN(h)) {
+        setFondoHCono(Math.max(1, Math.round(h)));
+        setRaccordoError(null);
+      } else {
+        setRaccordoError("Il raggio di raccordo inserito è troppo grande per questa combinazione di diametro e angolo.");
+      }
     }
   };
 
@@ -178,6 +200,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
     setLockedBy(null);
     setFondoHCono(0);
     setFondoAngolo(null);
+    setRaccordoError(null);
   };
 
 
