@@ -503,7 +503,40 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
                 />
               </div>
             </div>
-            <span className="text-[10px] text-neutral-600 block">Angolo tra la base orizzontale e la parete obliqua del cono (α = atan(h_cono / (D_int/2))).</span>
+            <span className="text-[10px] text-neutral-600 block">Angolo tra la base orizzontale e la parete obliqua del cono. Con raccordo non nullo, α è ricavato numericamente dall'altezza totale.</span>
+
+            <div>
+              <label className="block text-xs font-bold text-neutral-900 mb-1 flex items-center gap-1 uppercase tracking-wide">
+                Raggio Raccordo (r_raccordo)
+                <span className="text-[10px] text-neutral-700 font-bold">(mm)</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="1000"
+                required
+                value={fondoRRaccordo || ''}
+                onChange={(e) => setFondoRRaccordo(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-full text-sm bg-[#d7ecd7]/80 border-2 border-emerald-300/80 rounded-lg px-3 py-2 text-emerald-950 font-bold focus:bg-[#cde9cd] focus:ring-2 focus:ring-emerald-800 focus:outline-hidden transition-colors"
+              />
+              <p className="text-[10px] text-neutral-700 mt-1 leading-snug">
+                Il raccordo tra il cono e il colletto non è a spigolo vivo ma è arrotondato con questo raggio. Il volume del fondo tiene conto di questa curvatura. <em>Default suggerito: 30 mm.</em>
+              </p>
+            </div>
+
+            {raccordoError && (
+              <div className="p-2.5 bg-red-50 border border-red-300 rounded-lg text-[11px] text-red-800 flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-red-600" />
+                <span>{raccordoError}</span>
+              </div>
+            )}
+
+            <div className="p-2.5 bg-sky-50 border border-sky-200 rounded-lg text-[11px] text-sky-900 flex items-start gap-2">
+              <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-sky-600" />
+              <span>⚠️ Il volume calcolato tiene ora conto del raccordo (raggio bordo) tra la parete conica e il colletto. Con raggi di raccordo maggiori o diametri maggiori, la differenza rispetto a un cono a spigolo vivo diventa più significativa.</span>
+            </div>
+
+
 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
