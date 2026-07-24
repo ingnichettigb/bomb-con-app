@@ -9,43 +9,91 @@ import { TankInput, HeadConfig, HeadCalculated, CalculationResult } from '../typ
  * Calculates geometry and volumes for a single head (coperchio or fondo)
  */
 export function calculateHead(dInt: number, config: HeadConfig): HeadCalculated {
-  // === Testa conica (fondo conico retto) ===
+  // === Testa conica (fondo conico retto con raccordo cono/colletto) ===
   if (config.type === 'conico') {
-    const hCono = Math.max(1, config.hCono ?? dInt / 2);
     const R_base = dInt / 2;
-    const slant_int = Math.sqrt(R_base * R_base + hCono * hCono); // apotema interno (mm)
-    // Volume interno del cono (retto, apice in basso)
-    const V_cono_L = (Math.PI * R_base * R_base * hCono) / 3 / 1e6;
+    const r_racc = Math.max(0, config.rRaccordo ?? 30);
+    const H_totale_target = Math.max(1, config.hCono ?? R_base);
+
+    // Data H_totale_target = H_cono_puro + H_racc, ricava alfa via bisezione.
+    // H_totale(alfa) = (R_base - r_racc*(1 - sin(alfa))) * tan(alfa) + r_racc*cos(alfa)
+    const H_of = (alfaDeg: number) => {
+      const a = alfaDeg * Math.PI / 180;
+      const Z = r_racc * Math.sin(a);
+      const K = r_racc - Z;
+      const Y = R_base - K;
+      const Hc = Y * Math.tan(a);
+      const Hr = r_racc * Math.cos(a);
+      return Hc + Hr;
+    };
+    let lo = 0.01, hi = 89.99;
+    for (let i = 0; i < 60; i++) {
+      const mid = (lo + hi) / 2;
+      if (H_of(mid) - H_totale_target < 0) lo = mid; else hi = mid;
+    }
+    const alfa = (lo + hi) / 2;
+    const alfaRad = alfa * Math.PI / 180;
+    const betaDeg = 90 - alfa;
+    const betaRad = betaDeg * Math.PI / 180;
+
+    // Geometria raccordo
+    const Z = r_racc * Math.sin(alfaRad);
+    const K = r_racc - Z;
+    const Y = Math.max(0, R_base - K);
+    const H_cono = Y * Math.tan(alfaRad);
+    const H_racc = r_racc * Math.cos(alfaRad);
+    const H_totale = H_cono + H_racc;
+
+    // Baricentro dello spicchio di raccordo (Pappo-Guldino)
+    const Xr = R_base - r_racc;
+    let Baric = Xr;
+    if (r_racc > 0 && betaDeg > 0) {
+      const denom = (r_racc * 2 * Math.PI / 360 * betaDeg * 3);
+      if (denom !== 0) {
+        Baric = ((r_racc * 2 * 2 * r_racc * Math.sin(betaRad / 2)) / denom) * Math.cos(betaRad / 2) + Xr;
+      }
+    }
+
+    // Volumi (mm in ingresso, litri in uscita)
+    const V_cono_L = (Math.PI * Y * Y * H_cono) / 3 / 1e6;
+    const V_tronco_L = (Math.PI * H_racc / 3) * (Y * Y + Xr * Y + Xr * Xr) / 1e6;
+    const V_spicchio_L = (Baric * 2 * Math.PI * r_racc * r_racc * Math.PI / 360 * betaDeg) / 1e6;
+    const V_cono_totale_L = V_cono_L + V_tronco_L + V_spicchio_L;
+
     const V_colletto_L = (Math.PI * R_base * R_base * config.hColletto) / 1e6;
-    // Sviluppo lamiera: settore circolare di raggio = apotema esterno (~slant + sp/2)
-    const slant_ext = Math.sqrt((R_base + config.sp / 2) ** 2 + hCono ** 2);
-    const Sviluppo_mm = 2 * Math.PI * (R_base + config.sp / 2); // arco alla base (mm)
-    // Superficie laterale del cono (m²) usata come area del disco/settore da tagliare
-    const Area_lat_mq = (Math.PI * R_base * slant_ext) / 1e6;
+
+    // Sviluppo lamiera: settore conico (approssimato con Y come raggio base cono) + fascia raccordo + colletto
+    const slant_cono = Math.sqrt(Y * Y + H_cono * H_cono);
+    const Sviluppo_mm = 2 * Math.PI * (R_base + config.sp / 2); // arco base (mm)
+    const Area_lat_cono_mq = (Math.PI * Y * slant_cono) / 1e6;
+    const Area_raccordo_mq = (2 * Math.PI * Xr * r_racc * betaDeg / 360 + 2 * Math.PI * r_racc * r_racc * (1 - Math.cos(betaRad)) / (2 * Math.PI)) / 1e6;
+    // Fascia toroidale (approssimazione Pappo): 2π·Baric · (arco = r_racc·βRad)
+    const Area_toro_mq = (2 * Math.PI * Baric * r_racc * betaRad) / 1e6;
     const Area_colletto_mq = (2 * Math.PI * R_base * config.hColletto) / 1e6;
-    const Area_totale_mq = Area_lat_mq + Area_colletto_mq;
+    const Area_totale_mq = Area_lat_cono_mq + Area_toro_mq + Area_colletto_mq;
+    void Area_raccordo_mq;
     const Peso_lamiera_kg = Area_totale_mq * config.sp * 8;
 
     return {
       R: 0,
-      r: 0,
+      r: r_racc,
       DR: 0,
-      X: 0,
-      alfa: 0,
-      beta: 0,
-      H1: 0,
-      H_int: hCono,
-      H2: 0,
-      H3: hCono, // usato come "altezza zona cono" nel loop di taratura
-      Y: 0,
-      Baric: 0,
-      K: 0,
-      H_esterna_totale: hCono + config.hColletto + config.sp,
-      V_calotta: V_cono_L, // volume cono
+      X: Xr,
+      alfa,
+      beta: betaDeg,
+      H1: H_racc,          // riusato: altezza verticale del raccordo
+      H_int: H_totale,
+      H2: H_racc,          // usato dal loop di taratura (zona 2 = raccordo)
+      H3: H_cono,          // usato dal loop di taratura (zona 1 = cono puro)
+      Y,
+      Baric,
+      K,
+      H_esterna_totale: H_totale + config.hColletto + config.sp,
+      V_calotta: V_cono_totale_L, // ora è cono + tronco + spicchio
       V_toro: 0,
       V_raccordo: 0,
       V_colletto: V_colletto_L,
-      V_testata_LT: V_cono_L + V_colletto_L,
+      V_testata_LT: V_cono_totale_L + V_colletto_L,
       Sviluppo_mm,
       Area_disco_da_tagliare_mq: Area_totale_mq,
       Peso_lamiera_kg,
@@ -155,16 +203,16 @@ export function calculateTank(input: TankInput): CalculationResult {
   const isConicFondo = input.fondo.type === 'conico';
 
   // Altezze zone
-  const H3_fondo = fondo.H3; // per conico = hCono
-  const H2_fondo = isConicFondo ? 0 : fondo.H2;
+  const H3_fondo = fondo.H3; // per conico = H_cono puro (sotto il raccordo)
+  const H2_fondo = isConicFondo ? fondo.H2 : fondo.H2; // per conico = H_racc (raccordo)
   const h_colletto_fondo = input.fondo.hColletto;
   const H3_coperchio = coperchio.H3;
   const H2_coperchio = coperchio.H2;
   const h_colletto_coperchio = input.coperchio.hColletto;
 
   // Altezze cumulative (quote, in mm, misurate dal fondo = 0)
-  const z1 = H3_fondo;                       // fine cono (o calotta) fondo
-  const z2 = z1 + H2_fondo;                  // fine raccordo toroidale fondo (=z1 per conico)
+  const z1 = H3_fondo;                       // fine cono puro (o calotta) fondo
+  const z2 = z1 + H2_fondo;                  // fine raccordo (toroidale o cono/colletto)
   const z3 = z2 + h_colletto_fondo;          // fine colletto fondo
   const z4 = z3 + lCil;                      // fine mantello cilindrico
   const z5 = z4 + h_colletto_coperchio;      // fine colletto coperchio
@@ -173,8 +221,8 @@ export function calculateTank(input: TankInput): CalculationResult {
 
   const H_tot = Math.round(z7);
 
-  // Precalcolo costanti zona 2 (solo per fondo bombato)
-  const raggio_fine_zona1 = isConicFondo ? dInt / 2 : Math.sqrt(H3_fondo * (2 * fondo.R - H3_fondo));
+  // Precalcolo costanti zona 2 fondo bombato
+  const raggio_fine_zona1 = isConicFondo ? fondo.Y : Math.sqrt(H3_fondo * (2 * fondo.R - H3_fondo));
   const BH_fondo = isConicFondo ? 0 : (raggio_fine_zona1 - fondo.X) * 2;
   let termSqFondo = isConicFondo ? 0 : fondo.r * fondo.r - Math.pow(BH_fondo / 2, 2);
   if (termSqFondo < 0) termSqFondo = 0;
@@ -188,8 +236,8 @@ export function calculateTank(input: TankInput): CalculationResult {
 
     if (h <= z1) {
       if (isConicFondo) {
-        // Cono retto: raggio lineare da 0 (a h=0) fino a dInt/2 (a h=hCono)
-        rVal = (dInt / 2) * (h / H3_fondo);
+        // Cono retto puro: raggio lineare da 0 (a h=0) fino a Y (a h=H_cono)
+        rVal = H3_fondo > 0 ? fondo.Y * (h / H3_fondo) : 0;
       } else {
         // Zona 1 — calotta sferica fondo bombato
         const h_zona = h;
@@ -198,12 +246,25 @@ export function calculateTank(input: TankInput): CalculationResult {
         rVal = Math.sqrt(term);
       }
     } else if (h <= z2) {
-      // Zona 2 — raccordo toroidale fondo (skippato se conico, perché z1==z2)
-      const h_zona = h - z1;
-      const BJ = BI_fondo + h_zona;
-      let term = BJ * (2 * fondo.r - BJ);
-      if (term < 0) term = 0;
-      rVal = Math.sqrt(term) + fondo.X;
+      if (isConicFondo) {
+        // Zona 2 conica — raccordo cono/colletto (arco tangente).
+        // Centro arco: (R_base - r_racc, z2). Punto: (R_base - r_racc*(1-cos(phi)), z2 - r_racc*sin(phi))
+        const r_racc = fondo.r;
+        const R_base = dInt / 2;
+        const dh = z2 - h; // 0 in cima, H_racc in fondo
+        let sinPhi = r_racc > 0 ? dh / r_racc : 0;
+        if (sinPhi > 1) sinPhi = 1;
+        if (sinPhi < 0) sinPhi = 0;
+        const phi = Math.asin(sinPhi);
+        rVal = R_base - r_racc * (1 - Math.cos(phi));
+      } else {
+        // Zona 2 — raccordo toroidale fondo bombato
+        const h_zona = h - z1;
+        const BJ = BI_fondo + h_zona;
+        let term = BJ * (2 * fondo.r - BJ);
+        if (term < 0) term = 0;
+        rVal = Math.sqrt(term) + fondo.X;
+      }
     } else if (h <= z5) {
       // Zone 3, 4, 5 — colletti e parte cilindrica
       rVal = dInt / 2;

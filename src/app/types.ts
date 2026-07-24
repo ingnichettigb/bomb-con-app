@@ -11,7 +11,8 @@ export interface HeadConfig {
   hColletto: number;  // altezza colletto (mm)
   R_custom?: number;  // raggio bombatura custom (mm)
   r_custom?: number;  // raggio raccordo custom (mm)
-  hCono?: number;     // altezza cono (mm) — solo per type='conico'
+  hCono?: number;     // altezza totale (cono + raccordo) (mm) — solo per type='conico'
+  rRaccordo?: number; // raggio raccordo cono/colletto (mm) — solo per type='conico'
 }
 
 export interface ReportMeta {

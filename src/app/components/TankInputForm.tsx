@@ -30,14 +30,46 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
   // Fondo State (sempre CONICO)
   const [fondoSp, setFondoSp] = useState<number>(initialInput.fondo.sp);
   const [fondoColletto, setFondoColletto] = useState<number>(initialInput.fondo.hColletto);
+  const [fondoRRaccordo, setFondoRRaccordo] = useState<number>(initialInput.fondo.rRaccordo ?? 30);
   const [fondoHCono, setFondoHCono] = useState<number>(initialInput.fondo.hCono ?? Math.round(initialInput.dInt / 2));
+
+  // Calcolo altezza totale del fondo conico (cono puro + raccordo) dato angolo, R_base, r_racc
+  const hTotFromAngle = (alfaDeg: number, R_base: number, r_racc: number): number => {
+    const a = alfaDeg * Math.PI / 180;
+    const Z = r_racc * Math.sin(a);
+    const K = r_racc - Z;
+    const Y = R_base - K;
+    if (Y <= 0) return NaN;
+    return Y * Math.tan(a) + r_racc * Math.cos(a);
+  };
+  // Bisezione: dato altezza totale target, trova angolo
+  const angleFromHTot = (H_target: number, R_base: number, r_racc: number): number | null => {
+    if (R_base <= 0) return null;
+    // Verifica raggiungibilità: max H a alfa→90° tende a infinito se Y>0. Y>0 richiede r_racc*(1-sin(alfa))<R_base.
+    let lo = 0.01, hi = 89.99;
+    for (let i = 0; i < 60; i++) {
+      const mid = (lo + hi) / 2;
+      const v = hTotFromAngle(mid, R_base, r_racc);
+      if (isNaN(v)) { hi = mid; continue; }
+      if (v - H_target < 0) lo = mid; else hi = mid;
+    }
+    const ang = (lo + hi) / 2;
+    const check = hTotFromAngle(ang, R_base, r_racc);
+    if (isNaN(check) || Math.abs(check - H_target) > Math.max(2, H_target * 0.02)) return null;
+    return ang;
+  };
+
   const [fondoAngolo, setFondoAngolo] = useState<number | null>(() => {
     const r = initialInput.dInt / 2;
     const h = initialInput.fondo.hCono ?? Math.round(r);
-    return r > 0 ? Math.round(Math.atan(h / r) * (180 / Math.PI) * 100) / 100 : null;
+    const rracc = initialInput.fondo.rRaccordo ?? 30;
+    if (r <= 0) return null;
+    const ang = angleFromHTot(h, r, rracc);
+    return ang != null ? Math.round(ang * 100) / 100 : null;
   });
   // lockedBy: 'h' means user typed altezza → angle is derived/disabled; 'angolo' means user typed angolo → altezza derived/disabled
   const [lockedBy, setLockedBy] = useState<'h' | 'angolo' | null>('h');
+  const [raccordoError, setRaccordoError] = useState<string | null>(null);
   const [showAngleHelp, setShowAngleHelp] = useState<boolean>(false);
   const [fondoCollettoConfirmed, setFondoCollettoConfirmed] = useState<boolean>(true);
 
@@ -89,26 +121,36 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
     }
   }, [coperchioUgualeAlFondo, fondoType, fondoSp, fondoColletto, fondoRCustom, fondoRCustomVal]);
 
-  // Recalcolo automatico del campo DERIVATO quando D_int cambia
+  // Recalcolo automatico del campo DERIVATO quando D_int o r_raccordo cambia
   useEffect(() => {
     const r = dInt / 2;
     if (r <= 0) return;
     if (lockedBy === 'h') {
-      // altezza è manuale → ricalcola angolo
-      const ang = Math.atan(fondoHCono / r) * (180 / Math.PI);
-      setFondoAngolo(Math.round(ang * 100) / 100);
+      const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo);
+      if (ang != null) {
+        setFondoAngolo(Math.round(ang * 100) / 100);
+        setRaccordoError(null);
+      } else {
+        setRaccordoError("Il raggio di raccordo inserito è troppo grande per questa combinazione di diametro e altezza.");
+      }
     } else if (lockedBy === 'angolo' && fondoAngolo != null) {
-      const h = r * Math.tan(fondoAngolo * Math.PI / 180);
-      setFondoHCono(Math.max(1, Math.round(h)));
+      const h = hTotFromAngle(fondoAngolo, r, fondoRRaccordo);
+      if (!isNaN(h)) {
+        setFondoHCono(Math.max(1, Math.round(h)));
+        setRaccordoError(null);
+      } else {
+        setRaccordoError("Il raggio di raccordo inserito è troppo grande per questa combinazione di diametro e angolo.");
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dInt]);
+  }, [dInt, fondoRRaccordo]);
 
   const handleFondoHConoChange = (raw: string) => {
     if (raw === '') {
       setLockedBy(null);
       setFondoHCono(0);
       setFondoAngolo(null);
+      setRaccordoError(null);
       return;
     }
     const val = Math.max(1, parseInt(raw) || 0);
@@ -116,8 +158,14 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
     setLockedBy('h');
     const r = dInt / 2;
     if (r > 0) {
-      const ang = Math.atan(val / r) * (180 / Math.PI);
-      setFondoAngolo(Math.round(ang * 100) / 100);
+      const ang = angleFromHTot(val, r, fondoRRaccordo);
+      if (ang != null) {
+        setFondoAngolo(Math.round(ang * 100) / 100);
+        setRaccordoError(null);
+      } else {
+        setFondoAngolo(null);
+        setRaccordoError("Il raggio di raccordo inserito è troppo grande per questa combinazione di diametro e altezza.");
+      }
     } else {
       setFondoAngolo(null);
     }
@@ -127,6 +175,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
     if (raw === '') {
       setLockedBy(null);
       setFondoAngolo(null);
+      setRaccordoError(null);
       return;
     }
     let val = parseFloat(raw);
@@ -137,8 +186,13 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
     setLockedBy('angolo');
     const r = dInt / 2;
     if (r > 0) {
-      const h = r * Math.tan(val * Math.PI / 180);
-      setFondoHCono(Math.max(1, Math.round(h)));
+      const h = hTotFromAngle(val, r, fondoRRaccordo);
+      if (!isNaN(h)) {
+        setFondoHCono(Math.max(1, Math.round(h)));
+        setRaccordoError(null);
+      } else {
+        setRaccordoError("Il raggio di raccordo inserito è troppo grande per questa combinazione di diametro e angolo.");
+      }
     }
   };
 
@@ -146,6 +200,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
     setLockedBy(null);
     setFondoHCono(0);
     setFondoAngolo(null);
+    setRaccordoError(null);
   };
 
 
@@ -177,6 +232,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
         sp: fondoSp || 5,
         hColletto: fondoColletto || 25,
         hCono: fondoHCono || Math.round((dInt || 1000) / 2),
+        rRaccordo: fondoRRaccordo || 30,
       },
       coperchio: {
         type: coperchioType,
@@ -447,7 +503,40 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
                 />
               </div>
             </div>
-            <span className="text-[10px] text-neutral-600 block">Angolo tra la base orizzontale e la parete obliqua del cono (α = atan(h_cono / (D_int/2))).</span>
+            <span className="text-[10px] text-neutral-600 block">Angolo tra la base orizzontale e la parete obliqua del cono. Con raccordo non nullo, α è ricavato numericamente dall'altezza totale.</span>
+
+            <div>
+              <label className="block text-xs font-bold text-neutral-900 mb-1 flex items-center gap-1 uppercase tracking-wide">
+                Raggio Raccordo (r_raccordo)
+                <span className="text-[10px] text-neutral-700 font-bold">(mm)</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="1000"
+                required
+                value={fondoRRaccordo || ''}
+                onChange={(e) => setFondoRRaccordo(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-full text-sm bg-[#d7ecd7]/80 border-2 border-emerald-300/80 rounded-lg px-3 py-2 text-emerald-950 font-bold focus:bg-[#cde9cd] focus:ring-2 focus:ring-emerald-800 focus:outline-hidden transition-colors"
+              />
+              <p className="text-[10px] text-neutral-700 mt-1 leading-snug">
+                Il raccordo tra il cono e il colletto non è a spigolo vivo ma è arrotondato con questo raggio. Il volume del fondo tiene conto di questa curvatura. <em>Default suggerito: 30 mm.</em>
+              </p>
+            </div>
+
+            {raccordoError && (
+              <div className="p-2.5 bg-red-50 border border-red-300 rounded-lg text-[11px] text-red-800 flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-red-600" />
+                <span>{raccordoError}</span>
+              </div>
+            )}
+
+            <div className="p-2.5 bg-sky-50 border border-sky-200 rounded-lg text-[11px] text-sky-900 flex items-start gap-2">
+              <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-sky-600" />
+              <span>⚠️ Il volume calcolato tiene ora conto del raccordo (raggio bordo) tra la parete conica e il colletto. Con raggi di raccordo maggiori o diametri maggiori, la differenza rispetto a un cono a spigolo vivo diventa più significativa.</span>
+            </div>
+
+
 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
