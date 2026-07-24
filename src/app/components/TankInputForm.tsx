@@ -651,6 +651,21 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
               <span><strong>Tutte le misure da inserire</strong> (diametro, altezza, ecc.) sono <strong>misure interne</strong>. Non inserire le misure esterne.</span>
             </div>
 
+            <div>
+              <label className="block text-xs font-bold text-neutral-900 mb-1 flex items-center gap-1 uppercase tracking-wide">
+                Diametro Interno (D_int)
+                <span className="text-[10px] text-neutral-700 font-bold">(mm)</span>
+                <span className="text-[9px] bg-neutral-200 text-neutral-700 px-1 py-0.5 rounded font-bold">DA TAB DIMENSIONI</span>
+              </label>
+              <input
+                type="number"
+                value={dInt || ''}
+                readOnly
+                disabled
+                className="w-full text-sm bg-neutral-100 border-2 border-neutral-300 rounded-lg px-3 py-2 text-neutral-700 font-bold cursor-not-allowed"
+              />
+            </div>
+
 
             <div>
               <label className="block text-xs font-bold text-neutral-900 mb-2 flex items-center gap-1.5 uppercase tracking-wide">
