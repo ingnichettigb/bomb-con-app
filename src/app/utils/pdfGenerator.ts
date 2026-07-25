@@ -598,8 +598,8 @@ export async function generateCalibrationPDF(
       margin: { left: 15, right: 15 },
       theme: 'plain',
       styles: {
-        fontSize: 8,
-        cellPadding: 1.6,
+        fontSize: 7.2,
+        cellPadding: 1.0,
         textColor: [31, 41, 55],
         lineColor: [229, 231, 235],
         lineWidth: 0.1,
