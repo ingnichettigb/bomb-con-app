@@ -148,7 +148,7 @@ export const translations: Record<Language, TranslationDict> = {
   it: {
     appName: "BOMB-CON TARATURA",
     appSub: "v1.2 (EXCEL 01 COMPATIBLE)",
-    appTeaser: "Taratura millimetrica professionale per serbatoi cilindrici con fondo conico e coperchio bombato standard o custom",
+    appTeaser: "Taratura millimetrica professionale per serbatoi cilindrici con fondo conico e coperchio bombato standard o custom. Modello matematico integrato a 7 zone continue (passo 1 mm)",
     active: "ATTIVO",
     recalculate: "Ricalcola Taratura",
     calculate: "Calcola Taratura",
@@ -277,7 +277,7 @@ export const translations: Record<Language, TranslationDict> = {
   en: {
     appName: "BOMB-CON TARATURA",
     appSub: "v1.2 (EXCEL 01 COMPATIBLE)",
-    appTeaser: "Professional millimeter-by-millimeter calibration for cylindrical tanks with standard or custom heads",
+    appTeaser: "Professional millimeter-by-millimeter calibration for cylindrical tanks with standard or custom conic bottom and dished top. Integrated mathematical model with 7 continuous zones (1 mm steps)",
     active: "ACTIVE",
     recalculate: "Recalculate Calibration",
     calculate: "Calculate Calibration",
@@ -406,7 +406,7 @@ export const translations: Record<Language, TranslationDict> = {
   es: {
     appName: "BOMB-CON TARATURA",
     appSub: "v1.2 (COMPATIBLE CON EXCEL 01)",
-    appTeaser: "Calibración milimétrica profesional para tanques cilíndricos con extremos curvados estándar o personalizados",
+    appTeaser: "Calibración milimétrica profesional para tanques cilíndricos con fondo cónico estándar o personalizado y tapa bombada. Modelo matemático integrado de 7 zonas continuas (pasos de 1 mm)",
     active: "ACTIVO",
     recalculate: "Recalcular Calibración",
     calculate: "Calcular Calibración",
@@ -535,7 +535,7 @@ export const translations: Record<Language, TranslationDict> = {
   de: {
     appName: "BOMB-CON TARATURA",
     appSub: "v1.2 (EXCEL 01 KOMPATIBEL)",
-    appTeaser: "Professionelle millimetergenaue Kalibrierung für zylindrische Tanks mit Standard- oder kundenspezifischen Klöpperböden",
+    appTeaser: "Professionelle millimetergenaue Kalibrierung für zylindrische Tanks mit Standard- oder kundenspezifischem konischem Boden und gewölbtem Deckel. Integriertes mathematisches 7-Zonen-Modell (1 mm Schritte)",
     active: "AKTIV",
     recalculate: "Kalibrierung Neu Berechnen",
     calculate: "Kalibrierung Berechnen",
