@@ -19,7 +19,6 @@ import {
   Info, 
   HardHat, 
   Calendar, 
-  ClipboardCheck,
   Building2,
   Compass,
   Wrench,
@@ -29,7 +28,8 @@ import {
   Globe,
   Printer,
   Save,
-  Download
+  Download,
+  X
 } from 'lucide-react';
 import { generateCalibrationPDF } from './utils/pdfGenerator';
 
@@ -305,14 +305,14 @@ export default function App() {
                   {t.appName}
                 </h1>
               </div>
-              <p className="text-xs text-neutral-700 mt-0.5">
+              <p className="text-xs text-neutral-600 mt-0.5 leading-relaxed">
                 {t.appTeaser}
               </p>
             </div>
           </div>
 
           <div className="flex flex-col items-stretch sm:items-end gap-2 shrink-0">
-            {/* Top Row: Language Selector & Information Button */}
+            {/* Top Row: Language Selector, Information Button & Close Button */}
             <div className="flex items-center gap-2 self-start sm:self-auto">
               <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl border border-neutral-200">
                 <span className="p-1 text-neutral-500" title="Seleziona Lingua / Select Language">
@@ -355,14 +355,26 @@ export default function App() {
                    'Info'}
                 </span>
               </button>
-            </div>
 
-            {/* Bottom Row: Model Label Badge */}
-            <div className="flex items-center gap-2 text-xs bg-emerald-50/60 border border-emerald-200 rounded-lg p-2 max-w-sm shrink-0 self-start sm:self-auto">
-              <ClipboardCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="text-emerald-900 font-medium text-[10.5px]">
-                {t.zonesSub}
-              </span>
+              {/* Close Application Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.close();
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 rounded-lg border border-red-800 transition-all flex items-center justify-center gap-1.5 shadow-xs hover:scale-102 cursor-pointer font-bold text-xs"
+                title={lang === 'it' ? 'Chiudi applicazione' : lang === 'en' ? 'Close application' : lang === 'es' ? 'Cerrar aplicación' : 'Anwendung schließen'}
+              >
+                <X className="w-3.5 h-3.5 text-red-100" />
+                <span>
+                  {lang === 'it' ? 'Chiudi' :
+                   lang === 'en' ? 'Close' :
+                   lang === 'es' ? 'Cerrar' :
+                   'Schließen'}
+                </span>
+              </button>
             </div>
           </div>
         </div>
