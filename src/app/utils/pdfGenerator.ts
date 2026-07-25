@@ -532,12 +532,66 @@ export async function generateCalibrationPDF(
       currentY += 4.5;
     }
 
-    // Geometry & structural details
+    // Dati Geometrici e Strutturali (misure interne) — tabella unica raggruppata
+    const techTitleFull = labels[lang].techTitle + (lang === 'en' ? ' (internal measurements)' : lang === 'es' ? ' (medidas internas)' : lang === 'de' ? ' (Innenmaße)' : ' (misure interne)');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(6, 78, 59);
-    doc.text(labels[lang].techTitle, 15, currentY);
+    doc.text(techTitleFull, 15, currentY);
     currentY += 3;
+
+    const grpTop = lang === 'en' ? 'top head' : lang === 'es' ? 'cúpula sup.' : lang === 'de' ? 'obere Kuppe' : 'coperchio bombato';
+    const grpCyl = lang === 'en' ? 'cylindrical section' : lang === 'es' ? 'sección cilíndrica' : lang === 'de' ? 'Zylinderteil' : 'sezione cilindrica';
+    const grpCon = lang === 'en' ? 'conical bottom' : lang === 'es' ? 'fondo cónico' : lang === 'de' ? 'Konischer Boden' : 'fondo conico';
+    const grpAll = lang === 'en' ? 'top+shell+bottom' : lang === 'es' ? 'cúpula+virolas+fondo' : lang === 'de' ? 'Deckel+Schuss+Boden' : 'coperchio+virole+fondo';
+
+    const lblRoggio = lang === 'en' ? 'Dish Radius (R_custom) (mm)' : lang === 'es' ? 'Radio Bombeo (R_custom) (mm)' : lang === 'de' ? 'Wölbradius (R_custom) (mm)' : 'Raggio Bombatura (R_custom) (mm)';
+    const lblToro = lang === 'en' ? 'Knuckle Radius (r_custom) (mm)' : lang === 'es' ? 'Radio Toro Raccordo (r_custom) (mm)' : lang === 'de' ? 'Krempenradius (r_custom) (mm)' : 'Raggio Toro Raccordo (r_custom) (mm)';
+    const lblColletto = lang === 'en' ? 'Collar Height (h_colletto)' : lang === 'es' ? 'Altura Collarín (h_colletto)' : lang === 'de' ? 'Kragenhöhe (h_colletto)' : 'Altezza Colletto (h_colletto)';
+    const lblSviluppo = lang === 'en' ? 'Sheet Unrolling Development' : lang === 'es' ? 'Desarrollo Desenrollado Chapa' : lang === 'de' ? 'Blechabwicklung' : 'Sviluppo Srotolamento Lamiera';
+    const lblVolCyl = lang === 'en' ? 'Cylindrical Section Volume' : lang === 'es' ? 'Volumen Parte Cilíndrica' : lang === 'de' ? 'Volumen Zylinderteil' : 'Volume parte cilindrica';
+    const lblHcono = lang === 'en' ? 'Cone Height (h_cono) (mm)' : lang === 'es' ? 'Altura Cono (h_cono) (mm)' : lang === 'de' ? 'Konushöhe (h_cono) (mm)' : 'Altezza Cono (h_cono) (mm)';
+    const lblGradi = lang === 'en' ? 'Inclination Degrees (°)' : lang === 'es' ? 'Grados de Inclinación (°)' : lang === 'de' ? 'Neigungswinkel (°)' : 'Gradi di Inclinazione (°)';
+    const lblRracc = lang === 'en' ? 'Fillet Radius (r_raccordo)' : lang === 'es' ? 'Radio Empalme (r_raccordo)' : lang === 'de' ? 'Verrundungsradius (r_raccordo)' : 'Raggio Raccordo (r_raccordo)';
+    const lblPesoTotLam = lang === 'en' ? 'Total Sheet Metal Weight' : lang === 'es' ? 'Peso Total Chapa' : lang === 'de' ? 'Gesamtes Blechgewicht' : 'Peso totale lamiera';
+    const lblPesoPieno = lang === 'en' ? 'Weight with Full Content' : lang === 'es' ? 'Peso con Contenido Lleno' : lang === 'de' ? 'Gewicht bei Vollfüllung' : 'Peso con Contenuto Pieno';
+
+    const cop = result.input.coperchio;
+    const fon = result.input.fondo;
+    const R_cop = result.coperchio.R;
+    const r_cop = result.coperchio.r;
+    const pesoTotLamiera = result.pesoLamieraFondo + result.pesoLamieraCoperchio;
+
+    const body: any[] = [
+      // coperchio bombato
+      [grpTop, labels[lang].internalDiameter.replace(':',''), `${result.input.dInt} mm`],
+      [grpTop, labels[lang].thickness.replace(':',''), `${cop.sp} mm`],
+      [grpTop, lblRoggio, `${formatNumPDF(R_cop, 1)} mm`],
+      [grpTop, lblToro, `${formatNumPDF(r_cop, 1)} mm`],
+      [grpTop, lblColletto, `${cop.hColletto} mm`],
+      [grpTop, labels[lang].topVolume.replace(':',''), `${formatNumPDF(result.volumeCoperchio, 2)} l`],
+      [grpTop, labels[lang].sheetWeight.replace(':',''), `${formatNumPDF(result.pesoLamieraCoperchio, 1)} kg`],
+      // sezione cilindrica
+      [grpCyl, labels[lang].cylinderLength.replace(':',''), `${result.input.lCil} mm`],
+      [grpCyl, labels[lang].thickness.replace(':',''), `${cop.sp} mm`],
+      [grpCyl, lblSviluppo, `${formatNumPDF(Math.PI * result.input.dInt, 1)} mm`],
+      [grpCyl, lblVolCyl, `${formatNumPDF(result.volumeCilindro, 2)} l`],
+      [grpCyl, labels[lang].sheetWeight.replace(':',''), `${formatNumPDF(Math.PI * result.input.dInt * result.input.lCil * cop.sp * 8 / 1e6, 1)} kg`],
+      // fondo conico
+      [grpCon, lblHcono, `${formatNumPDF(fon.hCono ?? 0, 1)} mm`],
+      [grpCon, lblGradi, `${formatNumPDF(result.fondo.alfa, 2)} °`],
+      [grpCon, lblRracc, `${formatNumPDF(fon.rRaccordo ?? 0, 1)} mm`],
+      [grpCon, lblColletto, `${fon.hColletto} mm`],
+      [grpCon, labels[lang].thickness.replace(':',''), `${fon.sp} mm`],
+      [grpCon, labels[lang].bottomVolume.replace(':',''), `${formatNumPDF(result.volumeFondo, 2)} l`],
+      [grpCon, labels[lang].sheetWeight.replace(':',''), `${formatNumPDF(result.pesoLamieraFondo, 1)} kg`],
+      // coperchio + virole + fondo
+      [grpAll, labels[lang].totalHeight.replace(':',''), `${result.H_tot} mm`],
+      [grpAll, labels[lang].density.replace(':',''), `${formatNumPDF(result.input.rho, 3)} kg/dm³`],
+      [grpAll, labels[lang].totalVolume.replace(':',''), `${formatNumPDF(result.volumeTotale, 2)} l`],
+      [grpAll, lblPesoTotLam, `${formatNumPDF(pesoTotLamiera, 1)} kg`],
+      [grpAll, lblPesoPieno, `${formatNumPDF(result.pesoContenutoTotale, 1)} kg (${formatNumPDF(result.pesoContenutoTotale / 1000, 3)} t)`],
+    ];
 
     autoTable(doc, {
       startY: currentY,
@@ -545,126 +599,34 @@ export async function generateCalibrationPDF(
       theme: 'plain',
       styles: {
         fontSize: 8,
-        cellPadding: 1.8,
+        cellPadding: 1.6,
         textColor: [31, 41, 55],
         lineColor: [229, 231, 235],
         lineWidth: 0.1,
       },
       columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 60 },
-        1: { fontStyle: 'normal', cellWidth: 30 },
-        2: { fontStyle: 'bold', cellWidth: 60 },
-        3: { fontStyle: 'normal', cellWidth: 30 },
+        0: { fontStyle: 'italic', cellWidth: 50, textColor: [107, 114, 128] },
+        1: { fontStyle: 'bold', cellWidth: 90 },
+        2: { fontStyle: 'normal', cellWidth: 40, halign: 'right' },
       },
-      body: [
-        [
-          labels[lang].internalDiameter, `${result.input.dInt} mm`,
-          labels[lang].bottomVolume, `${formatNumPDF(result.volumeFondo, 2)} l`
-        ],
-        [
-          labels[lang].cylinderLength, `${result.input.lCil} mm`,
-          labels[lang].cylinderVolume, `${formatNumPDF(result.volumeCilindro, 2)} l`
-        ],
-        [
-          labels[lang].totalHeight, `${result.H_tot} mm`,
-          labels[lang].topVolume, `${formatNumPDF(result.volumeCoperchio, 2)} l`
-        ],
-        [
-          labels[lang].density, `${formatNumPDF(result.input.rho, 3)} kg/dm³`,
-          labels[lang].totalVolume, `${formatNumPDF(result.volumeTotale, 2)} l`
-        ]
-      ]
-    });
-
-    currentY = (doc as any).lastAutoTable.finalY + 6;
-
-    // Sheets details
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(6, 78, 59);
-    doc.text(labels[lang].sheetTitle, 15, currentY);
-    currentY += 3;
-
-    autoTable(doc, {
-      startY: currentY,
-      margin: { left: 15, right: 15 },
-      theme: 'plain',
-      styles: {
-        fontSize: 8,
-        cellPadding: 1.8,
-        textColor: [31, 41, 55],
-        lineColor: [229, 231, 235],
-        lineWidth: 0.1,
-      },
-      columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 45 },
-        1: { cellWidth: 45 },
-        2: { fontStyle: 'bold', cellWidth: 45 },
-        3: { cellWidth: 45 },
-      },
-      body: [
-        [
-          labels[lang].bottomHead, '',
-          labels[lang].topHead, ''
-        ],
-        [
-          `  • ${labels[lang].thickness}`, `${result.input.fondo.sp} mm`,
-          `  • ${labels[lang].thickness}`, `${result.input.coperchio.sp} mm`
-        ],
-        [
-          `  • ${labels[lang].development}`, `${formatNumPDF(result.fondo.Sviluppo_mm, 1)} mm`,
-          `  • ${labels[lang].development}`, `${formatNumPDF(result.coperchio.Sviluppo_mm, 1)} mm`
-        ],
-        [
-          `  • ${labels[lang].area}`, `${formatNumPDF(result.sviluppoFondoMq, 3)} m²`,
-          `  • ${labels[lang].area}`, `${formatNumPDF(result.sviluppoCoperchioMq, 3)} m²`
-        ],
-        [
-          `  • ${labels[lang].sheetWeight}`, `${formatNumPDF(result.pesoLamieraFondo, 1)} kg`,
-          `  • ${labels[lang].sheetWeight}`, `${formatNumPDF(result.pesoLamieraCoperchio, 1)} kg`
-        ]
-      ],
+      body,
       didParseCell: (data) => {
-        if (data.row.index === 0) {
+        const grp = data.row.raw && (data.row.raw as any[])[0];
+        // Highlight group boundaries with a subtle top border
+        if (data.column.index === 0 && data.row.index > 0) {
+          const prev = body[data.row.index - 1][0];
+          if (prev !== grp) {
+            data.cell.styles.lineWidth = { top: 0.3, right: 0.1, bottom: 0.1, left: 0.1 } as any;
+            data.cell.styles.lineColor = [16, 185, 129];
+          }
+        }
+        // Bold the totalVolume row
+        const label = (data.row.raw as any[])[1];
+        if (typeof label === 'string' && label === labels[lang].totalVolume.replace(':','')) {
           data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [240, 253, 244];
           data.cell.styles.textColor = [6, 78, 59];
         }
       }
-    });
-
-    currentY = (doc as any).lastAutoTable.finalY + 6;
-
-    // Weights & loads
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(6, 78, 59);
-    doc.text(labels[lang].weightTitle, 15, currentY);
-    currentY += 3;
-
-    autoTable(doc, {
-      startY: currentY,
-      margin: { left: 15, right: 15 },
-      theme: 'plain',
-      styles: {
-        fontSize: 8.5,
-        cellPadding: 2,
-        textColor: [31, 41, 55],
-        lineColor: [229, 231, 235],
-        lineWidth: 0.1,
-      },
-      columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 60 },
-        1: { cellWidth: 30 },
-        2: { fontStyle: 'bold', cellWidth: 60 },
-        3: { cellWidth: 30 },
-      },
-      body: [
-        [
-          labels[lang].fullWeight, `${formatNumPDF(result.pesoContenutoTotale, 1)} kg (${formatNumPDF(result.pesoContenutoTotale / 1000, 3)} t)`,
-          labels[lang].weightPerCm, `${formatNumPDF(result.pesoContenutoPerCmCilindro, 2)} kg/cm`
-        ]
-      ]
     });
 
     // Signature/Stamp blocks
