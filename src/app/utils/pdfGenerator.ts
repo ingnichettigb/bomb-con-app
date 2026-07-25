@@ -499,29 +499,26 @@ export async function generateCalibrationPDF(
       },
       columnStyles: {
         0: { fontStyle: 'bold', cellWidth: 35 },
-        1: { cellWidth: 55 },
-        2: { fontStyle: 'bold', cellWidth: 35 },
-        3: { cellWidth: 65 },
+        1: { cellWidth: 92 },
+        2: { fontStyle: 'bold', cellWidth: 28 },
+        3: { cellWidth: 35 },
       },
       body: [
         [
-          labels[lang].customer.toUpperCase(), result.input.report.cliente || '-',
+          labels[lang].tank.toUpperCase(), result.input.report.nomeSerbatoio || '-',
           labels[lang].job.toUpperCase(), result.input.report.commessa || result.input.report.riferimento || '-'
         ],
         [
-          labels[lang].tank.toUpperCase(), result.input.report.nomeSerbatoio || '-',
-          labels[lang].compiler.toUpperCase(), result.input.report.compilatore || '-'
+          labels[lang].customer.toUpperCase(), result.input.report.cliente || '-',
+          labels[lang].factoryNo.toUpperCase(), result.input.report.numeroFabbrica || '-'
         ],
         [
-          labels[lang].dwg.toUpperCase(), result.input.report.numeroDisegno || '-',
-          labels[lang].date.toUpperCase(), result.input.report.data || '-'
-        ],
-        [
-          labels[lang].factoryNo.toUpperCase(), result.input.report.numeroFabbrica || '-',
-          labels[lang].tagNo.toUpperCase(), result.input.report.tagNumber || '-'
+          labels[lang].tagNo.toUpperCase(), result.input.report.tagNumber || '-',
+          labels[lang].dwg.toUpperCase(), result.input.report.numeroDisegno || '-'
         ]
       ]
     });
+
 
     let currentY = (doc as any).lastAutoTable.finalY + 6;
 
