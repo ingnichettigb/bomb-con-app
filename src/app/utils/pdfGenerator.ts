@@ -63,7 +63,7 @@ export async function generateCalibrationPDF(
     })();
 
     // Reconstruct listData
-    const listData = [];
+    const listData: { cm: number; mm: number; litri: number; delta: number }[] = [];
     for (let cm = 0; cm <= maxCm; cm++) {
       const mm = cm * 10;
       const hClamped = Math.min(mm, result.H_tot);
@@ -499,9 +499,9 @@ export async function generateCalibrationPDF(
       },
       columnStyles: {
         0: { fontStyle: 'bold', cellWidth: 35 },
-        1: { cellWidth: 92 },
-        2: { fontStyle: 'bold', cellWidth: 28 },
-        3: { cellWidth: 35 },
+        1: { cellWidth: 90 },
+        2: { fontStyle: 'bold', cellWidth: 38 },
+        3: { cellWidth: 27 },
       },
       body: [
         [
@@ -543,7 +543,7 @@ export async function generateCalibrationPDF(
     const grpTop = lang === 'en' ? 'top head' : lang === 'es' ? 'cúpula sup.' : lang === 'de' ? 'obere Kuppe' : 'coperchio bombato';
     const grpCyl = lang === 'en' ? 'cylindrical section' : lang === 'es' ? 'sección cilíndrica' : lang === 'de' ? 'Zylinderteil' : 'sezione cilindrica';
     const grpCon = lang === 'en' ? 'conical bottom' : lang === 'es' ? 'fondo cónico' : lang === 'de' ? 'Konischer Boden' : 'fondo conico';
-    const grpAll = lang === 'en' ? 'top+shell+bottom' : lang === 'es' ? 'cúpula+virolas+fondo' : lang === 'de' ? 'Deckel+Schuss+Boden' : 'coperchio+virole+fondo';
+    const grpAll = lang === 'en' ? 'Top + cylindrical part + bottom' : lang === 'es' ? 'Cúpula + parte cilíndrica + fondo' : lang === 'de' ? 'Deckel + Zylinderteil + Boden' : 'Coperchio + parte cilindrica + fondo';
 
     const lblRoggio = lang === 'en' ? 'Dish Radius (R_custom) (mm)' : lang === 'es' ? 'Radio Bombeo (R_custom) (mm)' : lang === 'de' ? 'Wölbradius (R_custom) (mm)' : 'Raggio Bombatura (R_custom) (mm)';
     const lblToro = lang === 'en' ? 'Knuckle Radius (r_custom) (mm)' : lang === 'es' ? 'Radio Toro Raccordo (r_custom) (mm)' : lang === 'de' ? 'Krempenradius (r_custom) (mm)' : 'Raggio Toro Raccordo (r_custom) (mm)';
@@ -613,7 +613,16 @@ export async function generateCalibrationPDF(
       },
       body,
       didParseCell: (data) => {
-        const label = (data.row.raw as any[])[1];
+        const raw = data.row.raw as any[];
+        const label = raw[1];
+        // Show the group label only on the first row of each group
+        if (data.section === 'body' && data.column.index === 0) {
+          const grp = raw[0] as string;
+          const firstIdx = body.findIndex((r) => r[0] === grp);
+          if (data.row.index !== firstIdx) {
+            data.cell.text = [''];
+          }
+        }
         // Bold every volume row (label and value)
         if (typeof label === 'string' && /volum/i.test(label)) {
           if (data.column.index > 0) {
@@ -702,23 +711,24 @@ export async function generateCalibrationPDF(
 
     // Page 2+: Calibration List Table
     if (condensed) {
+      const blockHeader = [
+        labels[lang].colCm,
+        labels[lang].colMm,
+        labels[lang].colVol,
+        labels[lang].colDelta,
+      ];
       const condensedHeaders = [
-        [
-          labels[lang].colCm,
-          labels[lang].colMm,
-          labels[lang].colVol,
-          labels[lang].colDelta,
-          '', // Spacer
-          labels[lang].colCm,
-          labels[lang].colMm,
-          labels[lang].colVol,
-          labels[lang].colDelta
-        ]
+        [...blockHeader, '', ...blockHeader, '', ...blockHeader]
       ];
 
       const rowsPerPage = 38;
+      const blocks = 3;
       const totalRows = listData.length;
-      const pagesNeeded = Math.ceil(totalRows / (rowsPerPage * 2));
+      const pagesNeeded = Math.ceil(totalRows / (rowsPerPage * blocks));
+
+      const spacerCols = [4, 9];
+      const blockStartCols = [0, 5, 10];
+      const blockEndCols = [3, 8, 13];
 
       for (let p = 0; p < pagesNeeded; p++) {
         doc.addPage();
@@ -733,33 +743,35 @@ export async function generateCalibrationPDF(
         doc.setTextColor(75, 85, 99);
         doc.text(`${labels[lang].tank} ${result.input.report.nomeSerbatoio || '-'}   •   ${labels[lang].dwg} ${result.input.report.numeroDisegno || '-'}   •   ${labels[lang].capacityMax} ${formatNumPDF(result.volumeTotale, 1)} l`, 15, 23);
 
-        const leftStart = p * (rowsPerPage * 2);
-        const rightStart = leftStart + rowsPerPage;
+        const pageStart = p * (rowsPerPage * blocks);
 
-        const pageBody = [];
+        const pageBody: any[] = [];
         for (let r = 0; r < rowsPerPage; r++) {
-          const leftIdx = leftStart + r;
-          const rightIdx = rightStart + r;
+          const idxs = [0, 1, 2].map((b) => pageStart + b * rowsPerPage + r);
+          if (idxs.every((i) => i >= totalRows)) break;
 
-          if (leftIdx >= totalRows && rightIdx >= totalRows) {
-            break;
-          }
-
-          const leftRow = leftIdx < totalRows ? listData[leftIdx] : null;
-          const rightRow = rightIdx < totalRows ? listData[rightIdx] : null;
-
-          pageBody.push([
-            leftRow ? `${leftRow.cm} cm` : '',
-            leftRow ? `${leftRow.mm} mm` : '',
-            leftRow ? `${formatNumPDF(leftRow.litri, 2)} l` : '',
-            leftRow ? (leftRow.cm > 0 ? `${formatNumPDF(leftRow.delta, 2)} l/cm` : '-') : '',
-            '', // Spacer
-            rightRow ? `${rightRow.cm} cm` : '',
-            rightRow ? `${rightRow.mm} mm` : '',
-            rightRow ? `${formatNumPDF(rightRow.litri, 2)} l` : '',
-            rightRow ? (rightRow.cm > 0 ? `${formatNumPDF(rightRow.delta, 2)} l/cm` : '-') : '',
-          ]);
+          const cells: string[] = [];
+          idxs.forEach((idx, b) => {
+            const row = idx < totalRows ? listData[idx] : null;
+            if (b > 0) cells.push(''); // spacer
+            cells.push(row ? `${row.cm}` : '');
+            cells.push(row ? `${row.mm}` : '');
+            cells.push(row ? `${formatNumPDF(row.litri, 2)}` : '');
+            cells.push(row ? (row.cm > 0 ? `${formatNumPDF(row.delta, 2)}` : '-') : '');
+          });
+          pageBody.push(cells);
         }
+
+        const blockColStyles: any = {};
+        blockStartCols.forEach((s) => {
+          blockColStyles[s] = { halign: 'left', fontStyle: 'bold', cellWidth: 13 };
+          blockColStyles[s + 1] = { halign: 'center', cellWidth: 13 };
+          blockColStyles[s + 2] = { halign: 'right', fontStyle: 'bold', cellWidth: 18 };
+          blockColStyles[s + 3] = { halign: 'right', cellWidth: 14 };
+        });
+        spacerCols.forEach((c) => {
+          blockColStyles[c] = { cellWidth: 3, fillColor: [255, 255, 255] };
+        });
 
         autoTable(doc, {
           startY: 26,
@@ -768,33 +780,23 @@ export async function generateCalibrationPDF(
           body: pageBody,
           theme: 'striped',
           styles: {
-            fontSize: 8,
-            cellPadding: 1.6,
+            fontSize: 7,
+            cellPadding: 1.4,
             valign: 'middle',
             halign: 'center',
           },
           headStyles: {
             fillColor: [6, 78, 59],
             textColor: [255, 255, 255],
-            fontSize: 8.5,
+            fontSize: 7,
             fontStyle: 'bold',
           },
-          columnStyles: {
-            0: { halign: 'left', fontStyle: 'bold', cellWidth: 20 },
-            1: { halign: 'center', cellWidth: 20 },
-            2: { halign: 'right', fontStyle: 'bold', cellWidth: 27 },
-            3: { halign: 'right', cellWidth: 21 },
-            4: { cellWidth: 4, fillColor: [255, 255, 255] },
-            5: { halign: 'left', fontStyle: 'bold', cellWidth: 20 },
-            6: { halign: 'center', cellWidth: 20 },
-            7: { halign: 'right', fontStyle: 'bold', cellWidth: 27 },
-            8: { halign: 'right', cellWidth: 21 }
-          },
+          columnStyles: blockColStyles,
           alternateRowStyles: {
             fillColor: [220, 245, 235],
           },
           didParseCell: (data) => {
-            if (data.column.index === 4) {
+            if (spacerCols.includes(data.column.index)) {
               data.cell.styles.fillColor = [255, 255, 255];
               if (data.section === 'head') {
                 data.cell.styles.lineWidth = 0;
@@ -808,35 +810,21 @@ export async function generateCalibrationPDF(
             const w = data.cell.width;
             const h = data.cell.height;
 
-            // Electric green vertical lines
             doc.setDrawColor(16, 185, 129);
             doc.setLineWidth(0.15);
 
-            // Left Table Left Edge
-            if (col === 0) {
+            if (blockStartCols.includes(col)) {
               doc.line(x - 0.2, y, x - 0.2, y + h);
               doc.line(x + 0.2, y, x + 0.2, y + h);
             }
-            // Left Table Right Edge
-            if (col === 3) {
-              const rx = x + w;
-              doc.line(rx - 0.2, y, rx - 0.2, y + h);
-              doc.line(rx + 0.2, y, rx + 0.2, y + h);
-            }
-            // Right Table Left Edge
-            if (col === 5) {
-              doc.line(x - 0.2, y, x - 0.2, y + h);
-              doc.line(x + 0.2, y, x + 0.2, y + h);
-            }
-            // Right Table Right Edge
-            if (col === 8) {
+            if (blockEndCols.includes(col)) {
               const rx = x + w;
               doc.line(rx - 0.2, y, rx - 0.2, y + h);
               doc.line(rx + 0.2, y, rx + 0.2, y + h);
             }
 
             // Top double horizontal line
-            if (data.section === 'head' && col !== 4) {
+            if (data.section === 'head' && !spacerCols.includes(col)) {
               doc.line(x, y - 0.2, x + w, y - 0.2);
               doc.line(x, y + 0.2, x + w, y + 0.2);
             }
@@ -848,12 +836,11 @@ export async function generateCalibrationPDF(
         if (finalY) {
           doc.setDrawColor(16, 185, 129);
           doc.setLineWidth(0.15);
-          // Left column bottom
-          doc.line(15, finalY - 0.2, 103, finalY - 0.2);
-          doc.line(15, finalY + 0.2, 103, finalY + 0.2);
-          // Right column bottom
-          doc.line(107, finalY - 0.2, 195, finalY - 0.2);
-          doc.line(107, finalY + 0.2, 195, finalY + 0.2);
+          const blockRanges = [[15, 73], [76, 134], [137, 195]];
+          blockRanges.forEach(([x1, x2]) => {
+            doc.line(x1, finalY - 0.2, x2, finalY - 0.2);
+            doc.line(x1, finalY + 0.2, x2, finalY + 0.2);
+          });
         }
       }
     } else {
