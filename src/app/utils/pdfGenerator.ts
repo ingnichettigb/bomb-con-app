@@ -543,7 +543,7 @@ export async function generateCalibrationPDF(
     const grpTop = lang === 'en' ? 'top head' : lang === 'es' ? 'cúpula sup.' : lang === 'de' ? 'obere Kuppe' : 'coperchio bombato';
     const grpCyl = lang === 'en' ? 'cylindrical section' : lang === 'es' ? 'sección cilíndrica' : lang === 'de' ? 'Zylinderteil' : 'sezione cilindrica';
     const grpCon = lang === 'en' ? 'conical bottom' : lang === 'es' ? 'fondo cónico' : lang === 'de' ? 'Konischer Boden' : 'fondo conico';
-    const grpAll = lang === 'en' ? 'top+shell+bottom' : lang === 'es' ? 'cúpula+virolas+fondo' : lang === 'de' ? 'Deckel+Schuss+Boden' : 'coperchio+virole+fondo';
+    const grpAll = lang === 'en' ? 'Top + cylindrical part + bottom' : lang === 'es' ? 'Cúpula + parte cilíndrica + fondo' : lang === 'de' ? 'Deckel + Zylinderteil + Boden' : 'Coperchio + parte cilindrica + fondo';
 
     const lblRoggio = lang === 'en' ? 'Dish Radius (R_custom) (mm)' : lang === 'es' ? 'Radio Bombeo (R_custom) (mm)' : lang === 'de' ? 'Wölbradius (R_custom) (mm)' : 'Raggio Bombatura (R_custom) (mm)';
     const lblToro = lang === 'en' ? 'Knuckle Radius (r_custom) (mm)' : lang === 'es' ? 'Radio Toro Raccordo (r_custom) (mm)' : lang === 'de' ? 'Krempenradius (r_custom) (mm)' : 'Raggio Toro Raccordo (r_custom) (mm)';
