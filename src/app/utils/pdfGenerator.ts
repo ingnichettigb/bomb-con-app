@@ -593,6 +593,8 @@ export async function generateCalibrationPDF(
       [grpAll, lblPesoPieno, `${formatNumPDF(result.pesoContenutoTotale, 1)} kg (${formatNumPDF(result.pesoContenutoTotale / 1000, 3)} t)`],
     ];
 
+    const groupBounds: Record<string, { x1: number; y1: number; x2: number; y2: number }> = {};
+
     autoTable(doc, {
       startY: currentY,
       margin: { left: 15, right: 15 },
@@ -611,23 +613,47 @@ export async function generateCalibrationPDF(
       },
       body,
       didParseCell: (data) => {
-        const grp = data.row.raw && (data.row.raw as any[])[0];
-        // Highlight group boundaries with a subtle top border
-        if (data.column.index === 0 && data.row.index > 0) {
-          const prev = body[data.row.index - 1][0];
-          if (prev !== grp) {
-            data.cell.styles.lineWidth = { top: 0.3, right: 0.1, bottom: 0.1, left: 0.1 } as any;
-            data.cell.styles.lineColor = [16, 185, 129];
+        const label = (data.row.raw as any[])[1];
+        // Bold every volume row (label and value)
+        if (typeof label === 'string' && /volum/i.test(label)) {
+          if (data.column.index > 0) {
+            data.cell.styles.fontStyle = 'bold';
+          }
+          if (label === labels[lang].totalVolume.replace(':', '')) {
+            data.cell.styles.textColor = [6, 78, 59];
           }
         }
-        // Bold the totalVolume row
-        const label = (data.row.raw as any[])[1];
-        if (typeof label === 'string' && label === labels[lang].totalVolume.replace(':','')) {
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.textColor = [6, 78, 59];
+      },
+      didDrawCell: (data) => {
+        if (data.section !== 'body') return;
+        const grp = (data.row.raw as any[])[0] as string;
+        const b = groupBounds[grp];
+        const { x, y, width, height } = data.cell;
+        if (!b) {
+          groupBounds[grp] = { x1: x, y1: y, x2: x + width, y2: y + height };
+        } else {
+          b.x1 = Math.min(b.x1, x);
+          b.y1 = Math.min(b.y1, y);
+          b.x2 = Math.max(b.x2, x + width);
+          b.y2 = Math.max(b.y2, y + height);
         }
+      },
+    });
+
+    // Group outlines: double thin electric-green frame, olive-green single for the summary group
+    Object.entries(groupBounds).forEach(([grp, b]) => {
+      const isSummary = grp === grpAll;
+      doc.setLineWidth(0.2);
+      if (isSummary) {
+        doc.setDrawColor(85, 107, 47); // dark olive green
+        doc.rect(b.x1, b.y1, b.x2 - b.x1, b.y2 - b.y1, 'S');
+      } else {
+        doc.setDrawColor(0, 200, 83); // electric green
+        doc.rect(b.x1, b.y1, b.x2 - b.x1, b.y2 - b.y1, 'S');
+        doc.rect(b.x1 + 0.6, b.y1 + 0.6, b.x2 - b.x1 - 1.2, b.y2 - b.y1 - 1.2, 'S');
       }
     });
+
 
     // Signature/Stamp blocks
     const footerY = 230;
