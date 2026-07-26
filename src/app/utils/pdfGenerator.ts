@@ -613,7 +613,16 @@ export async function generateCalibrationPDF(
       },
       body,
       didParseCell: (data) => {
-        const label = (data.row.raw as any[])[1];
+        const raw = data.row.raw as any[];
+        const label = raw[1];
+        // Show the group label only on the first row of each group
+        if (data.section === 'body' && data.column.index === 0) {
+          const grp = raw[0] as string;
+          const firstIdx = body.findIndex((r) => r[0] === grp);
+          if (data.row.index !== firstIdx) {
+            data.cell.text = [''];
+          }
+        }
         // Bold every volume row (label and value)
         if (typeof label === 'string' && /volum/i.test(label)) {
           if (data.column.index > 0) {
