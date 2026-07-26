@@ -499,9 +499,9 @@ export async function generateCalibrationPDF(
       },
       columnStyles: {
         0: { fontStyle: 'bold', cellWidth: 35 },
-        1: { cellWidth: 92 },
-        2: { fontStyle: 'bold', cellWidth: 28 },
-        3: { cellWidth: 35 },
+        1: { cellWidth: 90 },
+        2: { fontStyle: 'bold', cellWidth: 38 },
+        3: { cellWidth: 27 },
       },
       body: [
         [
