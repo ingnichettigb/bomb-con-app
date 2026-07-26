@@ -63,7 +63,7 @@ export async function generateCalibrationPDF(
     })();
 
     // Reconstruct listData
-    const listData = [];
+    const listData: { cm: number; mm: number; litri: number; delta: number }[] = [];
     for (let cm = 0; cm <= maxCm; cm++) {
       const mm = cm * 10;
       const hClamped = Math.min(mm, result.H_tot);
