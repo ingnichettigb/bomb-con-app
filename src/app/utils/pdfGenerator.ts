@@ -747,11 +747,13 @@ export async function generateCalibrationPDF(
         const pageStart = p * (rowsPerPage * blocks);
 
         const pageBody: any[] = [];
+        const pageCm: (number | null)[][] = [];
         for (let r = 0; r < rowsPerPage; r++) {
           const idxs = [0, 1, 2].map((b) => pageStart + b * rowsPerPage + r);
           if (idxs.every((i) => i >= totalRows)) break;
 
           const cells: string[] = [];
+          const cmRow: (number | null)[] = [];
           idxs.forEach((idx, b) => {
             const row = idx < totalRows ? listData[idx] : null;
             if (b > 0) cells.push(''); // spacer
@@ -759,9 +761,12 @@ export async function generateCalibrationPDF(
             cells.push(row ? `${row.mm}` : '');
             cells.push(row ? `${formatNumPDF(row.litri, 2)}` : '');
             cells.push(row ? (row.cm > 0 ? `${formatNumPDF(row.delta, 2)}` : '-') : '');
+            cmRow.push(row ? row.cm : null);
           });
           pageBody.push(cells);
+          pageCm.push(cmRow);
         }
+
 
         const blockColStyles: any = {};
         blockStartCols.forEach((s) => {
