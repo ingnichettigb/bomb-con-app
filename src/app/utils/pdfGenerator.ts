@@ -807,8 +807,23 @@ export async function generateCalibrationPDF(
               if (data.section === 'head') {
                 data.cell.styles.lineWidth = 0;
               }
+              return;
+            }
+            if (data.section === 'body') {
+              const col = data.column.index;
+              const b = col < 4 ? 0 : col < 9 ? 1 : 2;
+              const cm = pageCm[data.row.index]?.[b];
+              if (cm === null || cm === undefined) return;
+              const darkBand = Math.floor(cm / 100) % 2 === 1;
+              const odd = data.row.index % 2 === 1;
+              if (darkBand) {
+                data.cell.styles.fillColor = odd ? [186, 225, 207] : [208, 238, 226];
+              } else {
+                data.cell.styles.fillColor = odd ? [220, 245, 235] : [255, 255, 255];
+              }
             }
           },
+
           didDrawCell: (data) => {
             const col = data.column.index;
             const x = data.cell.x;
