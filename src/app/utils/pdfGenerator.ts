@@ -490,6 +490,7 @@ export async function generateCalibrationPDF(
       startY: 56,
       margin: { left: 15, right: 15 },
       theme: 'plain',
+      tableWidth: 180,
       styles: {
         fontSize: 8,
         cellPadding: 1.5,
@@ -498,10 +499,10 @@ export async function generateCalibrationPDF(
         lineWidth: 0.1,
       },
       columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 35 },
-        1: { cellWidth: 90 },
-        2: { fontStyle: 'bold', cellWidth: 38 },
-        3: { cellWidth: 27 },
+        0: { fontStyle: 'bold', cellWidth: 25 },
+        1: { cellWidth: 75 },
+        2: { fontStyle: 'bold', cellWidth: 30 },
+        3: { cellWidth: 50 },
       },
       body: [
         [
