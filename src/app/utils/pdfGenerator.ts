@@ -747,11 +747,13 @@ export async function generateCalibrationPDF(
         const pageStart = p * (rowsPerPage * blocks);
 
         const pageBody: any[] = [];
+        const pageCm: (number | null)[][] = [];
         for (let r = 0; r < rowsPerPage; r++) {
           const idxs = [0, 1, 2].map((b) => pageStart + b * rowsPerPage + r);
           if (idxs.every((i) => i >= totalRows)) break;
 
           const cells: string[] = [];
+          const cmRow: (number | null)[] = [];
           idxs.forEach((idx, b) => {
             const row = idx < totalRows ? listData[idx] : null;
             if (b > 0) cells.push(''); // spacer
@@ -759,9 +761,12 @@ export async function generateCalibrationPDF(
             cells.push(row ? `${row.mm}` : '');
             cells.push(row ? `${formatNumPDF(row.litri, 2)}` : '');
             cells.push(row ? (row.cm > 0 ? `${formatNumPDF(row.delta, 2)}` : '-') : '');
+            cmRow.push(row ? row.cm : null);
           });
           pageBody.push(cells);
+          pageCm.push(cmRow);
         }
+
 
         const blockColStyles: any = {};
         blockStartCols.forEach((s) => {
@@ -802,8 +807,23 @@ export async function generateCalibrationPDF(
               if (data.section === 'head') {
                 data.cell.styles.lineWidth = 0;
               }
+              return;
+            }
+            if (data.section === 'body') {
+              const col = data.column.index;
+              const b = col < 4 ? 0 : col < 9 ? 1 : 2;
+              const cm = pageCm[data.row.index]?.[b];
+              if (cm === null || cm === undefined) return;
+              const darkBand = Math.floor(cm / 100) % 2 === 1;
+              const odd = data.row.index % 2 === 1;
+              if (darkBand) {
+                data.cell.styles.fillColor = odd ? [186, 225, 207] : [208, 238, 226];
+              } else {
+                data.cell.styles.fillColor = odd ? [220, 245, 235] : [255, 255, 255];
+              }
             }
           },
+
           didDrawCell: (data) => {
             const col = data.column.index;
             const x = data.cell.x;
@@ -902,6 +922,19 @@ export async function generateCalibrationPDF(
         alternateRowStyles: {
           fillColor: [220, 245, 235],
         },
+        didParseCell: (data) => {
+          if (data.section !== 'body') return;
+          const cm = listData[data.row.index]?.cm;
+          if (cm === undefined) return;
+          const darkBand = Math.floor(cm / 100) % 2 === 1;
+          const odd = data.row.index % 2 === 1;
+          if (darkBand) {
+            data.cell.styles.fillColor = odd ? [186, 225, 207] : [208, 238, 226];
+          } else {
+            data.cell.styles.fillColor = odd ? [220, 245, 235] : [255, 255, 255];
+          }
+        },
+
         didDrawCell: (data) => {
           const col = data.column.index;
           const x = data.cell.x;
