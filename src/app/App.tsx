@@ -29,7 +29,9 @@ import {
   Printer,
   Save,
   Download,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { generateCalibrationPDF } from './utils/pdfGenerator';
 
@@ -112,7 +114,15 @@ export default function App() {
 
   const [input, setInput] = useState<TankInput>(defaultInput);
   const [formKey, setFormKey] = useState<number>(0);
-  const [activeMainTab, setActiveMainTab] = useState<'simulation' | 'strapping'>('simulation');
+  const [step, setStep] = useState<number>(1);
+  const TOTAL_STEPS = 7;
+  const stepLabels: string[] = lang === 'en'
+    ? ['Compiler & Logo', 'Tank Identification', 'Tank Geometry', 'Simulator & Charts', 'Volumes & Weights', 'Calibration Table', 'Save & Export']
+    : lang === 'es'
+    ? ['Datos Compilador & Logo', 'Identificación Tanque', 'Geometría del Tanque', 'Simulador y Gráficos', 'Volúmenes y Pesos', 'Tabla de Calibración', 'Guardar y Exportar']
+    : lang === 'de'
+    ? ['Ersteller & Logo', 'Tank-Identifikation', 'Tank-Geometrie', 'Simulator & Diagramme', 'Volumen & Gewichte', 'Kalibriertabelle', 'Speichern & Export']
+    : ['Dati Compilatore & Logo', 'Dati Identificativi Serbatoio', 'Configurazione Geometrica', 'Simulatore & Grafici', 'Sintesi Volumi & Pesi', 'Tabella di Taratura', 'Salvataggio & Esportazione'];
   const [saveFeedback, setSaveFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [activeTankId, setActiveTankId] = useState<string | null>(null);
 
@@ -382,11 +392,66 @@ export default function App() {
 
       {/* PRIMARY CONTAINER */}
       <main className="max-w-7xl mx-auto p-4 md:p-6 print:p-0">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 print:block">
-          
-          {/* LEFT SIDEBAR: INPUT CONTROLS - Hidden on Print */}
-          <section className="lg:col-span-4 space-y-4 print:hidden">
-            {/* Compiler Settings Trigger - at the beginning of the Form area */}
+        {/* WIZARD PROGRESS INDICATOR */}
+        <div className="print:hidden mb-6 bg-white border-4 border-double border-emerald-800 rounded-xl p-4 shadow-xs space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className="text-sm font-black uppercase text-emerald-950 tracking-tight">
+              {step}. {stepLabels[step - 1]}
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full uppercase">
+                {lang === 'en' ? `Step ${step} of ${TOTAL_STEPS}` :
+                 lang === 'es' ? `Paso ${step} de ${TOTAL_STEPS}` :
+                 lang === 'de' ? `Schritt ${step} von ${TOTAL_STEPS}` :
+                 `Passo ${step} di ${TOTAL_STEPS}`}
+              </span>
+              <button
+                type="button"
+                onClick={() => generateCalibrationPDF(result, lang, compilerInfo, false, reportNumber)}
+                className="bg-emerald-800 hover:bg-emerald-900 text-white font-extrabold py-2 px-3 rounded-lg text-[11px] shadow-xs transition-all flex items-center gap-1.5 cursor-pointer border border-emerald-950"
+              >
+                <Printer className="w-3.5 h-3.5 text-emerald-100" />
+                {lang === 'en' ? 'Print PDF' : lang === 'es' ? 'Imprimir PDF' : lang === 'de' ? 'PDF Drucken' : 'Stampa PDF'}
+              </button>
+              <button
+                type="button"
+                onClick={() => generateCalibrationPDF(result, lang, compilerInfo, true, reportNumber)}
+                className="bg-teal-700 hover:bg-teal-800 text-white font-extrabold py-2 px-3 rounded-lg text-[11px] shadow-xs transition-all flex items-center gap-1.5 cursor-pointer border border-teal-900"
+              >
+                <Printer className="w-3.5 h-3.5 text-teal-100" />
+                {lang === 'en' ? 'Condensed PDF' : lang === 'es' ? 'PDF Condensado' : lang === 'de' ? 'Kompakt PDF' : 'PDF condensata'}
+              </button>
+            </div>
+          </div>
+
+          <div className="h-2 w-full bg-emerald-100 rounded-full overflow-hidden">
+            <div className="h-full bg-emerald-800 rounded-full transition-all duration-300" style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {stepLabels.map((label, i) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setStep(i + 1)}
+                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase border transition-all cursor-pointer ${
+                  step === i + 1
+                    ? 'bg-emerald-800 text-white border-emerald-950 shadow-xs'
+                    : 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
+                }`}
+              >
+                {i + 1}. {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6 print:block">
+
+          {/* WIZARD STEP CONTENT - Hidden on Print */}
+          <section className="space-y-4 print:hidden">
+            {/* STEP 1 - Compiler Settings & Logo */}
+            {step === 1 && (
             <div className="bg-white border-4 border-double border-emerald-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -418,7 +483,10 @@ export default function App() {
                 {t.compilerBtn}
               </button>
             </div>
+            )}
 
+            {/* STEP 7 - Saved configurations management */}
+            {step === 7 && (
             <SavedTanksList 
               currentInput={input} 
               onLoadTank={handleLoadTank} 
@@ -426,8 +494,10 @@ export default function App() {
               activeTankId={activeTankId} 
               setActiveTankId={setActiveTankId} 
             />
+            )}
 
-            {/* Dati Identificativi Serbatoio with Double Green Line Border */}
+            {/* STEP 2 - Dati Identificativi Serbatoio */}
+            {step === 2 && (
             <div className="bg-white border-4 border-double border-emerald-800 rounded-xl p-4 shadow-xs space-y-3">
               <h4 className="text-xs font-black uppercase text-emerald-950 flex items-center gap-1.5 border-b border-emerald-100 pb-2">
                 <FileText className="w-4 h-4 text-emerald-800" />
@@ -591,83 +661,20 @@ export default function App() {
                 </div>
               </div>
             </div>
+            )}
 
-            <TankInputForm key={formKey} initialInput={input} onSubmit={setInput} lang={lang} />
+            {/* STEP 3 - Configurazione geometrica */}
+            {step === 3 && (
+              <TankInputForm key={formKey} initialInput={input} onSubmit={setInput} lang={lang} />
+            )}
           </section>
 
-          {/* RIGHT VIEWPORT: RESULTS DISPLAY */}
-          <section className="lg:col-span-8 space-y-6 print:w-full">
+          {/* RESULTS VIEWPORT */}
+          <section className="space-y-6 print:w-full">
             
-            {/* View Selector Tabs & Export - Hidden on Print */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 print:hidden">
-              <div className="flex-1 flex bg-sky-50/90 p-1.5 border-4 border-double border-emerald-800 rounded-xl text-xs font-bold gap-1.5 shadow-inner">
-                <button
-                  onClick={() => setActiveMainTab('simulation')}
-                  className={`flex-1 py-3.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer border ${
-                    activeMainTab === 'simulation'
-                      ? 'bg-sky-300 text-sky-950 border-sky-400 shadow-sm font-extrabold'
-                      : 'bg-sky-100/80 text-sky-900 border-sky-200 hover:bg-sky-200/90 hover:text-sky-950'
-                  }`}
-                >
-                  <Cylinder className="w-4 h-4 text-sky-850" />
-                  <span>
-                    {lang === 'en' ? 'Simulator & Section Charts' :
-                     lang === 'es' ? 'Simulador y Gráficos de Sección' :
-                     lang === 'de' ? 'Simulator & Schnittdiagramme' :
-                     'Simulatore & Grafici di Sezione'}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setActiveMainTab('strapping')}
-                  className={`flex-1 py-3.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer border ${
-                    activeMainTab === 'strapping'
-                      ? 'bg-sky-300 text-sky-950 border-sky-400 shadow-sm font-extrabold'
-                      : 'bg-sky-100/80 text-sky-900 border-sky-200 hover:bg-sky-200/90 hover:text-sky-950'
-                  }`}
-                >
-                  <FileText className="w-4 h-4 text-sky-850" />
-                  <span>
-                    {lang === 'en' ? 'Centimetric Calibration Table' :
-                     lang === 'es' ? 'Tabla de Calibración Centimétrica' :
-                     lang === 'de' ? 'Zentimeter-Kalibriertabelle' :
-                     'Tabella di Taratura Centimetrica'}
-                  </span>
-                </button>
-              </div>
 
-              {/* Tasti di Stampa PDF a destra */}
-              <div className="flex flex-row items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => generateCalibrationPDF(result, lang, compilerInfo, false, reportNumber)}
-                  className="bg-emerald-800 hover:bg-emerald-900 text-white font-extrabold py-3.5 px-4 rounded-xl text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 border border-emerald-950 hover:scale-[1.01]"
-                >
-                  <Printer className="w-4 h-4 text-emerald-100" />
-                  <span>
-                    {lang === 'en' ? 'Print PDF' :
-                     lang === 'es' ? 'Imprimir PDF' :
-                     lang === 'de' ? 'PDF Drucken' :
-                     'Stampa PDF'}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => generateCalibrationPDF(result, lang, compilerInfo, true, reportNumber)}
-                  className="bg-teal-700 hover:bg-teal-800 text-white font-extrabold py-3.5 px-4 rounded-xl text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 border border-teal-900 hover:scale-[1.01]"
-                >
-                  <Printer className="w-4 h-4 text-teal-100" />
-                  <span>
-                    {lang === 'en' ? 'Condensed PDF' :
-                     lang === 'es' ? 'PDF Condensado' :
-                     lang === 'de' ? 'Kompakt PDF' :
-                     'Stampa PDF condensata'}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* Custom Big Save Button - Under the tabs/print container ("allegato") */}
+            {/* STEP 7 - Save & export */}
+            {step === 7 && (
             <div className="print:hidden space-y-3">
               <button
                 type="button"
@@ -694,19 +701,50 @@ export default function App() {
                 </div>
               )}
             </div>
+            )}
 
-            {/* Selected Tab Output */}
+            {/* STEP OUTPUTS */}
             <div className="print:block">
-              {activeMainTab === 'simulation' && (
+              {step === 4 && (
                 <div className="print:hidden">
-                  <ResultsDashboard result={result} lang={lang} />
+                  <ResultsDashboard result={result} lang={lang} section="simulator" />
                 </div>
               )}
-              {activeMainTab === 'strapping' && (
+              {step === 5 && (
+                <div className="print:hidden">
+                  <ResultsDashboard result={result} lang={lang} section="summary" />
+                </div>
+              )}
+              {step === 6 && (
                 <div className="print:hidden">
                   <CalibrationTable result={result} lang={lang} compilerInfo={compilerInfo} />
                 </div>
               )}
+            </div>
+
+            {/* WIZARD NAVIGATION */}
+            <div className="print:hidden flex items-center justify-between gap-3 bg-white border-4 border-double border-emerald-800 rounded-xl p-3 shadow-xs">
+              <button
+                type="button"
+                disabled={step === 1}
+                onClick={() => setStep(s => Math.max(1, s - 1))}
+                className="flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                {lang === 'en' ? 'Back' : lang === 'es' ? 'Atrás' : lang === 'de' ? 'Zurück' : 'Indietro'}
+              </button>
+              <span className="text-[10px] font-extrabold uppercase text-neutral-500 text-center px-2 hidden sm:block">
+                {stepLabels[step - 1]}
+              </span>
+              <button
+                type="button"
+                disabled={step === TOTAL_STEPS}
+                onClick={() => setStep(s => Math.min(TOTAL_STEPS, s + 1))}
+                className="flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed bg-emerald-800 text-white border-emerald-950 hover:bg-emerald-900"
+              >
+                {lang === 'en' ? 'Next' : lang === 'es' ? 'Siguiente' : lang === 'de' ? 'Weiter' : 'Avanti'}
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Informational Guidelines Footer - Hidden on Print */}
