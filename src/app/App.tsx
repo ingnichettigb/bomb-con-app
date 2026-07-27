@@ -29,7 +29,9 @@ import {
   Printer,
   Save,
   Download,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { generateCalibrationPDF } from './utils/pdfGenerator';
 
