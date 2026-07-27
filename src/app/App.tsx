@@ -112,7 +112,7 @@ export default function App() {
 
   const [input, setInput] = useState<TankInput>(defaultInput);
   const [formKey, setFormKey] = useState<number>(0);
-  const [activeMainTab, setActiveMainTab] = useState<'simulation' | 'strapping'>('simulation');
+  const [step, setStep] = useState<number>(1);
   const [saveFeedback, setSaveFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [activeTankId, setActiveTankId] = useState<string | null>(null);
 
@@ -382,11 +382,66 @@ export default function App() {
 
       {/* PRIMARY CONTAINER */}
       <main className="max-w-7xl mx-auto p-4 md:p-6 print:p-0">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 print:block">
-          
-          {/* LEFT SIDEBAR: INPUT CONTROLS - Hidden on Print */}
-          <section className="lg:col-span-4 space-y-4 print:hidden">
-            {/* Compiler Settings Trigger - at the beginning of the Form area */}
+        {/* WIZARD PROGRESS INDICATOR */}
+        <div className="print:hidden mb-6 bg-white border-4 border-double border-emerald-800 rounded-xl p-4 shadow-xs space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className="text-sm font-black uppercase text-emerald-950 tracking-tight">
+              {step}. {stepLabels[step - 1]}
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full uppercase">
+                {lang === 'en' ? `Step ${step} of ${TOTAL_STEPS}` :
+                 lang === 'es' ? `Paso ${step} de ${TOTAL_STEPS}` :
+                 lang === 'de' ? `Schritt ${step} von ${TOTAL_STEPS}` :
+                 `Passo ${step} di ${TOTAL_STEPS}`}
+              </span>
+              <button
+                type="button"
+                onClick={() => generateCalibrationPDF(result, lang, compilerInfo, false, reportNumber)}
+                className="bg-emerald-800 hover:bg-emerald-900 text-white font-extrabold py-2 px-3 rounded-lg text-[11px] shadow-xs transition-all flex items-center gap-1.5 cursor-pointer border border-emerald-950"
+              >
+                <Printer className="w-3.5 h-3.5 text-emerald-100" />
+                {lang === 'en' ? 'Print PDF' : lang === 'es' ? 'Imprimir PDF' : lang === 'de' ? 'PDF Drucken' : 'Stampa PDF'}
+              </button>
+              <button
+                type="button"
+                onClick={() => generateCalibrationPDF(result, lang, compilerInfo, true, reportNumber)}
+                className="bg-teal-700 hover:bg-teal-800 text-white font-extrabold py-2 px-3 rounded-lg text-[11px] shadow-xs transition-all flex items-center gap-1.5 cursor-pointer border border-teal-900"
+              >
+                <Printer className="w-3.5 h-3.5 text-teal-100" />
+                {lang === 'en' ? 'Condensed PDF' : lang === 'es' ? 'PDF Condensado' : lang === 'de' ? 'Kompakt PDF' : 'PDF condensata'}
+              </button>
+            </div>
+          </div>
+
+          <div className="h-2 w-full bg-emerald-100 rounded-full overflow-hidden">
+            <div className="h-full bg-emerald-800 rounded-full transition-all duration-300" style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {stepLabels.map((label, i) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setStep(i + 1)}
+                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase border transition-all cursor-pointer ${
+                  step === i + 1
+                    ? 'bg-emerald-800 text-white border-emerald-950 shadow-xs'
+                    : 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
+                }`}
+              >
+                {i + 1}. {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6 print:block">
+
+          {/* WIZARD STEP CONTENT - Hidden on Print */}
+          <section className="space-y-4 print:hidden">
+            {/* STEP 1 - Compiler Settings & Logo */}
+            {step === 1 && (
             <div className="bg-white border-4 border-double border-emerald-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -418,7 +473,10 @@ export default function App() {
                 {t.compilerBtn}
               </button>
             </div>
+            )}
 
+            {/* STEP 7 - Saved configurations management */}
+            {step === 7 && (
             <SavedTanksList 
               currentInput={input} 
               onLoadTank={handleLoadTank} 
@@ -426,8 +484,10 @@ export default function App() {
               activeTankId={activeTankId} 
               setActiveTankId={setActiveTankId} 
             />
+            )}
 
-            {/* Dati Identificativi Serbatoio with Double Green Line Border */}
+            {/* STEP 2 - Dati Identificativi Serbatoio */}
+            {step === 2 && (
             <div className="bg-white border-4 border-double border-emerald-800 rounded-xl p-4 shadow-xs space-y-3">
               <h4 className="text-xs font-black uppercase text-emerald-950 flex items-center gap-1.5 border-b border-emerald-100 pb-2">
                 <FileText className="w-4 h-4 text-emerald-800" />
@@ -591,12 +651,16 @@ export default function App() {
                 </div>
               </div>
             </div>
+            )}
 
-            <TankInputForm key={formKey} initialInput={input} onSubmit={setInput} lang={lang} />
+            {/* STEP 3 - Configurazione geometrica */}
+            {step === 3 && (
+              <TankInputForm key={formKey} initialInput={input} onSubmit={setInput} lang={lang} />
+            )}
           </section>
 
-          {/* RIGHT VIEWPORT: RESULTS DISPLAY */}
-          <section className="lg:col-span-8 space-y-6 print:w-full">
+          {/* RESULTS VIEWPORT */}
+          <section className="space-y-6 print:w-full">
             
             {/* View Selector Tabs & Export - Hidden on Print */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 print:hidden">
