@@ -814,10 +814,11 @@ export async function generateCalibrationPDF(
               const b = col < 4 ? 0 : col < 9 ? 1 : 2;
               const cm = pageCm[data.row.index]?.[b];
               if (cm === null || cm === undefined) return;
-              const darkBand = Math.floor(cm / 100) % 2 === 1;
+              const blockNumber = Math.floor(cm / 100) + 1;
+              const isEvenBlock = blockNumber % 2 === 0;
               const odd = data.row.index % 2 === 1;
-              if (darkBand) {
-                data.cell.styles.fillColor = odd ? [186, 225, 207] : [208, 238, 226];
+              if (isEvenBlock) {
+                data.cell.styles.fillColor = odd ? [130, 200, 165] : [255, 255, 255];
               } else {
                 data.cell.styles.fillColor = odd ? [220, 245, 235] : [255, 255, 255];
               }
