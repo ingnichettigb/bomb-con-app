@@ -11,9 +11,10 @@ import { Layers, Activity, Scale, Info, ChevronRight, HelpCircle, ChevronUp, Che
 interface ResultsDashboardProps {
   result: CalculationResult;
   lang?: Language;
+  section?: 'all' | 'simulator' | 'summary';
 }
 
-export default function ResultsDashboard({ result, lang = 'it' }: ResultsDashboardProps) {
+export default function ResultsDashboard({ result, lang = 'it', section = 'all' }: ResultsDashboardProps) {
   const t = translations[lang];
   const [fillHeight, setFillHeight] = useState<number>(result.H_tot);
   const [activeSubTab, setActiveSubTab] = useState<'sintesi' | 'geometria'>('sintesi');
@@ -146,7 +147,8 @@ export default function ResultsDashboard({ result, lang = 'it' }: ResultsDashboa
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Simulation / Interactive Tank Section (Left / Top) */}
-      <div className="lg:col-span-5 bg-white border-4 border-double border-emerald-800 rounded-xl p-5 shadow-xs flex flex-col">
+      {(section === 'all' || section === 'simulator') && (
+      <div className={`${section === 'all' ? 'lg:col-span-5' : 'lg:col-span-12'} bg-white border-4 border-double border-emerald-800 rounded-xl p-5 shadow-xs flex flex-col`}>
         <h3 className="text-sm font-semibold text-neutral-900 pb-2 border-b border-neutral-100 flex items-center gap-1.5 mb-4">
           <Activity className="w-4 h-4 text-neutral-500" />
           {t.realtimeLevel}
@@ -435,9 +437,11 @@ export default function ResultsDashboard({ result, lang = 'it' }: ResultsDashboa
           
         </div>
       </div>
+      )}
 
       {/* Numerical and Mechanical Summaries (Right / Bottom) */}
-      <div className="lg:col-span-7 space-y-6 flex flex-col">
+      {(section === 'all' || section === 'summary') && (
+      <div className={`${section === 'all' ? 'lg:col-span-7' : 'lg:col-span-12'} space-y-6 flex flex-col`}>
         {/* Tab Selection */}
         <div className="flex border-b border-neutral-300 text-sm font-medium">
           <button
@@ -767,6 +771,7 @@ export default function ResultsDashboard({ result, lang = 'it' }: ResultsDashboa
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }
