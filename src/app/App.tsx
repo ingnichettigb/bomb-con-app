@@ -504,7 +504,29 @@ export default function App() {
         <div className="space-y-6 print:block">
 
           {/* WIZARD STEP CONTENT - Hidden on Print */}
-          <section className="space-y-4 print:hidden">
+          <section className="relative space-y-4 print:hidden">
+            {/* Previous Card Triangle - hidden on first step */}
+            {step > 1 && (
+              <button
+                type="button"
+                onClick={() => setStep(step - 1)}
+                aria-label={lang === 'en' ? 'Previous card' : lang === 'es' ? 'Tarjeta anterior' : lang === 'de' ? 'Vorherige Karte' : 'Carta precedente'}
+                title={lang === 'en' ? 'Previous card' : lang === 'es' ? 'Tarjeta anterior' : lang === 'de' ? 'Vorherige Karte' : 'Carta precedente'}
+                className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-30 items-center justify-center w-7 h-10 bg-emerald-800 hover:bg-emerald-700 hover:scale-110 transition-all cursor-pointer shadow-md"
+                style={{ clipPath: 'polygon(100% 0%, 100% 100%, 0% 50%)' }}
+              />
+            )}
+            {/* Next Card Triangle - hidden on last step */}
+            {step < TOTAL_STEPS && (
+              <button
+                type="button"
+                onClick={() => setStep(step + 1)}
+                aria-label={lang === 'en' ? 'Next card' : lang === 'es' ? 'Tarjeta siguiente' : lang === 'de' ? 'Nächste Karte' : 'Carta successiva'}
+                title={lang === 'en' ? 'Next card' : lang === 'es' ? 'Tarjeta siguiente' : lang === 'de' ? 'Nächste Karte' : 'Carta successiva'}
+                className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-30 items-center justify-center w-7 h-10 bg-emerald-800 hover:bg-emerald-700 hover:scale-110 transition-all cursor-pointer shadow-md"
+                style={{ clipPath: 'polygon(0% 0%, 0% 100%, 100% 50%)' }}
+              />
+            )}
             {/* STEP 1 - Compiler Settings & Logo */}
             {step === 1 && (
             <div className="bg-white border-4 border-double border-emerald-800 rounded-xl p-4 shadow-sm flex flex-col gap-3">
