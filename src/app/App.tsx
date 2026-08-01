@@ -370,10 +370,15 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
-                  if (typeof window !== 'undefined') {
-                    window.close();
-                  }
+                  if (typeof window === 'undefined') return;
+                  const msg = lang === 'en' ? 'Close the application?' : lang === 'es' ? '¿Cerrar la aplicación?' : lang === 'de' ? 'Anwendung schließen?' : 'Chiudere l\'applicazione?';
+                  if (!window.confirm(msg)) return;
+                  window.close();
+                  // Browsers block window.close() for tabs not opened by script:
+                  // fall back to an explicit "closed" screen.
+                  window.setTimeout(() => setAppClosed(true), 150);
                 }}
+
                 className="bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 rounded-lg border border-red-800 transition-all flex items-center justify-center gap-1.5 shadow-xs hover:scale-102 cursor-pointer font-bold text-xs"
                 title={lang === 'it' ? 'Chiudi applicazione' : lang === 'en' ? 'Close application' : lang === 'es' ? 'Cerrar aplicación' : 'Anwendung schließen'}
               >
