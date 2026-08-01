@@ -31,7 +31,8 @@ import {
   Download,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react';
 import { generateCalibrationPDF } from './utils/pdfGenerator';
 
@@ -40,6 +41,13 @@ export default function App() {
   const t = translations[lang];
   const [isCompilerModalOpen, setIsCompilerModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const langOptions: { code: Language; flag: string }[] = [
+    { code: 'it', flag: '🇮🇹' },
+    { code: 'en', flag: '🇬🇧' },
+    { code: 'es', flag: '🇪🇸' },
+    { code: 'de', flag: '🇩🇪' }
+  ];
   const [compilerInfo, setCompilerInfo] = useState<CompilerInfo>(() => {
     const saved = localStorage.getItem('bomb_bomb_compiler_info');
     if (saved) {
@@ -326,103 +334,98 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#ebf2ee] text-neutral-900 font-sans antialiased">
-      {/* HEADER SECTION - Hidden on Print */}
-      <header className="bg-white border-b border-neutral-200 py-4 px-6 print:hidden">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-900 text-white rounded-xl shadow-xs">
-              <Cylinder className="w-6 h-6 animate-pulse text-emerald-300" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black tracking-tight text-emerald-950 uppercase">
-                  {t.appName}
-                </h1>
-              </div>
-              <p className="text-xs text-neutral-600 mt-0.5 leading-relaxed">
-                {t.appTeaser}
-              </p>
-            </div>
+      {/* HEADER SECTION - Minimal & Sticky - Hidden on Print */}
+      <header className="sticky top-0 z-30 bg-white border-b border-neutral-200 py-2.5 px-6 print:hidden">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <div className="p-2 bg-emerald-900 text-white rounded-xl shadow-xs">
+            <Cylinder className="w-5 h-5 animate-pulse text-emerald-300" />
           </div>
-
-          <div className="flex flex-col items-stretch sm:items-end gap-2 shrink-0">
-            {/* Top Row: Language Selector, Information Button & Close Button */}
-            <div className="flex items-center gap-2 self-start sm:self-auto">
-              <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl border border-neutral-200">
-                <span className="p-1 text-neutral-500" title="Seleziona Lingua / Select Language">
-                  <Globe className="w-3.5 h-3.5 text-neutral-600" />
-                </span>
-                {[
-                  { code: 'it' as const, label: 'IT 🇮🇹' },
-                  { code: 'en' as const, label: 'EN 🇬🇧' },
-                  { code: 'es' as const, label: 'ES 🇪🇸' },
-                  { code: 'de' as const, label: 'DE 🇩🇪' }
-                ].map((item) => (
-                  <button
-                    key={item.code}
-                    type="button"
-                    onClick={() => setLang(item.code)}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-extrabold uppercase transition-all cursor-pointer ${
-                      lang === item.code
-                        ? 'bg-emerald-900 text-white shadow-xs scale-102 font-black'
-                        : 'text-neutral-700 hover:bg-neutral-200 hover:text-neutral-900 font-bold'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Information Button */}
-              <button
-                type="button"
-                id="informazione"
-                onClick={() => setIsInfoModalOpen(true)}
-                className="bg-emerald-800 hover:bg-emerald-900 text-white py-1.5 px-3 rounded-lg border border-emerald-950 transition-all flex items-center justify-center gap-1.5 shadow-xs hover:scale-102 cursor-pointer font-bold text-xs"
-                title={lang === 'en' ? 'Program Manual & Information' : 'Manuale e Informazioni'}
-              >
-                <Info className="w-3.5 h-3.5 text-emerald-200" />
-                <span>
-                  {lang === 'en' ? 'Info' :
-                   lang === 'es' ? 'Info' :
-                   lang === 'de' ? 'Info' :
-                   'Info'}
-                </span>
-              </button>
-
-              {/* Close Application Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (typeof window === 'undefined') return;
-                  const msg = lang === 'en' ? 'Close the application?' : lang === 'es' ? '¿Cerrar la aplicación?' : lang === 'de' ? 'Anwendung schließen?' : 'Chiudere l\'applicazione?';
-                  if (!window.confirm(msg)) return;
-                  window.close();
-                  // Browsers block window.close() for tabs not opened by script:
-                  // fall back to an explicit "closed" screen.
-                  window.setTimeout(() => setAppClosed(true), 150);
-                }}
-
-                className="bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 rounded-lg border border-red-800 transition-all flex items-center justify-center gap-1.5 shadow-xs hover:scale-102 cursor-pointer font-bold text-xs"
-                title={lang === 'it' ? 'Chiudi applicazione' : lang === 'en' ? 'Close application' : lang === 'es' ? 'Cerrar aplicación' : 'Anwendung schließen'}
-              >
-                <X className="w-3.5 h-3.5 text-red-100" />
-                <span>
-                  {lang === 'it' ? 'Chiudi' :
-                   lang === 'en' ? 'Close' :
-                   lang === 'es' ? 'Cerrar' :
-                   'Schließen'}
-                </span>
-              </button>
-            </div>
-          </div>
+          <h1 className="text-lg font-black tracking-tight text-emerald-950 uppercase">
+            {t.appName}
+          </h1>
         </div>
       </header>
 
       {/* PRIMARY CONTAINER */}
       <main className="max-w-7xl mx-auto p-4 md:p-6 print:p-0">
-        {/* WIZARD PROGRESS INDICATOR */}
-        <div className="print:hidden mb-6 bg-white border-4 border-double border-emerald-800 rounded-xl p-4 shadow-xs space-y-3">
+        {/* WIZARD PROGRESS INDICATOR - Sticky navigation card */}
+        <div className="print:hidden mb-6 sticky top-[53px] z-20 bg-white border-4 border-double border-emerald-800 rounded-xl p-4 shadow-xs space-y-3">
+          {/* Top Row: Language Dropdown, Info & Close */}
+          <div className="flex items-center justify-end gap-2 pb-2 border-b border-emerald-100">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsLangMenuOpen((v) => !v)}
+                className="flex items-center gap-1.5 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-neutral-700 transition-all cursor-pointer"
+                title="Seleziona Lingua / Select Language"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>{langOptions.find((o) => o.code === lang)?.flag}</span>
+                <span>{lang.toUpperCase()}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${isLangMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isLangMenuOpen && (
+                <div className="absolute right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-md overflow-hidden z-40 min-w-[110px]">
+                  {langOptions.map((item) => (
+                    <button
+                      key={item.code}
+                      type="button"
+                      onClick={() => { setLang(item.code); setIsLangMenuOpen(false); }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold uppercase text-left transition-all cursor-pointer ${
+                        lang === item.code ? 'bg-emerald-900 text-white' : 'text-neutral-700 hover:bg-neutral-100'
+                      }`}
+                    >
+                      <span>{item.flag}</span>
+                      <span>{item.code.toUpperCase()}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Information Button */}
+            <button
+              type="button"
+              id="informazione"
+              onClick={() => setIsInfoModalOpen(true)}
+              className="bg-emerald-800 hover:bg-emerald-900 text-white py-1.5 px-3 rounded-lg border border-emerald-950 transition-all flex items-center justify-center gap-1.5 shadow-xs hover:scale-102 cursor-pointer font-bold text-xs"
+              title={lang === 'en' ? 'Program Manual & Information' : 'Manuale e Informazioni'}
+            >
+              <Info className="w-3.5 h-3.5 text-emerald-200" />
+              <span>
+                {lang === 'en' ? 'Info' :
+                 lang === 'es' ? 'Info' :
+                 lang === 'de' ? 'Info' :
+                 'Info'}
+              </span>
+            </button>
+
+            {/* Close Application Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window === 'undefined') return;
+                const msg = lang === 'en' ? 'Close the application?' : lang === 'es' ? '¿Cerrar la aplicación?' : lang === 'de' ? 'Anwendung schließen?' : 'Chiudere l\'applicazione?';
+                if (!window.confirm(msg)) return;
+                window.close();
+                // Browsers block window.close() for tabs not opened by script:
+                // fall back to an explicit "closed" screen.
+                window.setTimeout(() => setAppClosed(true), 150);
+              }}
+
+              className="bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 rounded-lg border border-red-800 transition-all flex items-center justify-center gap-1.5 shadow-xs hover:scale-102 cursor-pointer font-bold text-xs"
+              title={lang === 'it' ? 'Chiudi applicazione' : lang === 'en' ? 'Close application' : lang === 'es' ? 'Cerrar aplicación' : 'Anwendung schließen'}
+            >
+              <X className="w-3.5 h-3.5 text-red-100" />
+              <span>
+                {lang === 'it' ? 'Chiudi' :
+                 lang === 'en' ? 'Close' :
+                 lang === 'es' ? 'Cerrar' :
+                 'Schließen'}
+              </span>
+            </button>
+          </div>
+
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <h2 className="text-sm font-black uppercase text-emerald-950 tracking-tight">
               {step}. {stepLabels[step - 1]}
