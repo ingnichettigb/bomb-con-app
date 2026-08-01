@@ -115,6 +115,7 @@ export default function App() {
   const [input, setInput] = useState<TankInput>(defaultInput);
   const [formKey, setFormKey] = useState<number>(0);
   const [step, setStep] = useState<number>(1);
+  const [appClosed, setAppClosed] = useState<boolean>(false);
   const TOTAL_STEPS = 7;
   const stepLabels: string[] = lang === 'en'
     ? ['Compiler & Logo', 'Tank Identification', 'Tank Geometry', 'Simulator & Charts', 'Volumes & Weights', 'Calibration Table', 'Save & Export']
