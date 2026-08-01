@@ -380,7 +380,7 @@ export default function App() {
               onClick={() => setStep(step - 1)}
               aria-label={lang === 'en' ? 'Previous step' : lang === 'es' ? 'Paso anterior' : lang === 'de' ? 'Vorheriger Schritt' : 'Passo precedente'}
               title={lang === 'en' ? 'Previous step' : lang === 'es' ? 'Paso anterior' : lang === 'de' ? 'Vorheriger Schritt' : 'Passo precedente'}
-              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full z-30 items-center justify-center w-7 h-10 bg-emerald-800 hover:bg-emerald-700 hover:scale-110 transition-all cursor-pointer shadow-md"
+              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[calc(100%+6px)] z-30 items-center justify-center w-7 h-10 bg-emerald-800 hover:bg-emerald-700 hover:scale-110 transition-all cursor-pointer shadow-md"
               style={{ clipPath: 'polygon(100% 0%, 100% 100%, 0% 50%)' }}
             />
           )}
@@ -391,7 +391,7 @@ export default function App() {
               onClick={() => setStep(step + 1)}
               aria-label={lang === 'en' ? 'Next step' : lang === 'es' ? 'Paso siguiente' : lang === 'de' ? 'Nächster Schritt' : 'Passo successivo'}
               title={lang === 'en' ? 'Next step' : lang === 'es' ? 'Paso siguiente' : lang === 'de' ? 'Nächster Schritt' : 'Passo successivo'}
-              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-full z-30 items-center justify-center w-7 h-10 bg-emerald-800 hover:bg-emerald-700 hover:scale-110 transition-all cursor-pointer shadow-md"
+              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+6px)] z-30 items-center justify-center w-7 h-10 bg-emerald-800 hover:bg-emerald-700 hover:scale-110 transition-all cursor-pointer shadow-md"
               style={{ clipPath: 'polygon(0% 0%, 0% 100%, 100% 50%)' }}
             />
           )}
