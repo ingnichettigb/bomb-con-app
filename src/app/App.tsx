@@ -115,6 +115,7 @@ export default function App() {
   const [input, setInput] = useState<TankInput>(defaultInput);
   const [formKey, setFormKey] = useState<number>(0);
   const [step, setStep] = useState<number>(1);
+  const [appClosed, setAppClosed] = useState<boolean>(false);
   const TOTAL_STEPS = 7;
   const stepLabels: string[] = lang === 'en'
     ? ['Compiler & Logo', 'Tank Identification', 'Tank Geometry', 'Simulator & Charts', 'Volumes & Weights', 'Calibration Table', 'Save & Export']
@@ -300,6 +301,29 @@ export default function App() {
     return { printTankPathData: path, mapHToYPrint };
   }, [result]);
 
+  if (appClosed) {
+    return (
+      <div className="min-h-dvh bg-[#ebf2ee] text-neutral-900 font-sans antialiased flex items-center justify-center p-6">
+        <div className="bg-white border-4 border-double border-emerald-800 rounded-xl p-8 max-w-md w-full text-center space-y-4 shadow-xs">
+          <h1 className="text-xl font-black uppercase text-emerald-950">BOMB-CON TARATURA</h1>
+          <p className="text-sm font-semibold text-emerald-900">
+            {lang === 'en' ? 'Application closed. You can safely close this browser tab.' :
+             lang === 'es' ? 'Aplicación cerrada. Puede cerrar esta pestaña del navegador.' :
+             lang === 'de' ? 'Anwendung geschlossen. Sie können diesen Browser-Tab schließen.' :
+             'Applicazione chiusa. Puoi chiudere questa scheda del browser.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => setAppClosed(false)}
+            className="bg-emerald-900 hover:bg-emerald-950 text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer shadow-md"
+          >
+            {lang === 'en' ? 'Reopen application' : lang === 'es' ? 'Reabrir aplicación' : lang === 'de' ? 'Anwendung erneut öffnen' : 'Riapri applicazione'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#ebf2ee] text-neutral-900 font-sans antialiased">
       {/* HEADER SECTION - Hidden on Print */}
@@ -370,10 +394,15 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
-                  if (typeof window !== 'undefined') {
-                    window.close();
-                  }
+                  if (typeof window === 'undefined') return;
+                  const msg = lang === 'en' ? 'Close the application?' : lang === 'es' ? '¿Cerrar la aplicación?' : lang === 'de' ? 'Anwendung schließen?' : 'Chiudere l\'applicazione?';
+                  if (!window.confirm(msg)) return;
+                  window.close();
+                  // Browsers block window.close() for tabs not opened by script:
+                  // fall back to an explicit "closed" screen.
+                  window.setTimeout(() => setAppClosed(true), 150);
                 }}
+
                 className="bg-red-600 hover:bg-red-700 text-white py-1.5 px-3 rounded-lg border border-red-800 transition-all flex items-center justify-center gap-1.5 shadow-xs hover:scale-102 cursor-pointer font-bold text-xs"
                 title={lang === 'it' ? 'Chiudi applicazione' : lang === 'en' ? 'Close application' : lang === 'es' ? 'Cerrar aplicación' : 'Anwendung schließen'}
               >
