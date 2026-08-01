@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { TankInput, CalculationResult, CompilerInfo } from './types';
 import { calculateTank } from './utils/calculations';
 import TankInputForm from './components/TankInputForm';
@@ -41,6 +41,9 @@ export default function App() {
   const t = translations[lang];
   const [isCompilerModalOpen, setIsCompilerModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const wizardCardRef = useRef<HTMLDivElement>(null);
+  const [stickyOffset, setStickyOffset] = useState(0);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const langOptions: { code: Language; flag: string }[] = [
     { code: 'it', flag: '🇮🇹' },
@@ -123,6 +126,22 @@ export default function App() {
   const [input, setInput] = useState<TankInput>(defaultInput);
   const [formKey, setFormKey] = useState<number>(0);
   const [step, setStep] = useState<number>(1);
+
+  useEffect(() => {
+    const headerEl = headerRef.current;
+    const cardEl = wizardCardRef.current;
+    if (!headerEl || !cardEl) return;
+
+    const measure = () => {
+      setStickyOffset(headerEl.offsetHeight + cardEl.offsetHeight);
+    };
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(headerEl);
+    observer.observe(cardEl);
+    return () => observer.disconnect();
+  }, [step, lang]);
   const [appClosed, setAppClosed] = useState<boolean>(false);
   const TOTAL_STEPS = 7;
   const stepLabels: string[] = lang === 'en'
@@ -335,7 +354,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#ebf2ee] text-neutral-900 font-sans antialiased">
       {/* HEADER SECTION - Minimal & Sticky - Hidden on Print */}
-      <header className="sticky top-0 z-30 bg-white border-b border-neutral-200 py-2.5 px-6 print:hidden">
+      <header ref={headerRef} className="sticky top-0 z-30 bg-white border-b border-neutral-200 py-2.5 px-6 print:hidden">
         <div className="max-w-7xl mx-auto flex items-center gap-3">
           <div className="p-2 bg-emerald-900 text-white rounded-xl shadow-xs">
             <Cylinder className="w-5 h-5 animate-pulse text-emerald-300" />
@@ -349,7 +368,11 @@ export default function App() {
       {/* PRIMARY CONTAINER */}
       <main className="max-w-7xl mx-auto p-4 md:p-6 print:p-0">
         {/* WIZARD PROGRESS INDICATOR - Sticky navigation card */}
-        <div className="print:hidden mb-6 sticky top-[53px] z-20 bg-white border-4 border-double border-emerald-800 rounded-xl p-4 shadow-xs space-y-3">
+        <div
+          ref={wizardCardRef}
+          className="print:hidden mb-3 sticky z-20 bg-white border-4 border-double border-emerald-800 rounded-xl p-4 shadow-xs space-y-3"
+          style={{ top: headerRef.current?.offsetHeight ?? 53 }}
+        >
           {/* Single Row: Title, Step badge, PDF actions, Language, Info & Close */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <h2 className="text-sm font-black uppercase text-emerald-950 tracking-tight shrink-0">
@@ -697,7 +720,7 @@ export default function App() {
 
             {/* STEP 3 - Configurazione geometrica */}
             {step === 3 && (
-              <TankInputForm key={formKey} initialInput={input} onSubmit={setInput} lang={lang} />
+              <TankInputForm key={formKey} initialInput={input} onSubmit={setInput} lang={lang} stickyOffset={stickyOffset} />
             )}
           </section>
 

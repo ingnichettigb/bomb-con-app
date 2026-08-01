@@ -15,9 +15,10 @@ interface TankInputFormProps {
   initialInput: TankInput;
   onSubmit: (input: TankInput) => void;
   lang?: Language;
+  stickyOffset?: number;
 }
 
-export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: TankInputFormProps) {
+export default function TankInputForm({ initialInput, onSubmit, lang = 'it', stickyOffset = 0 }: TankInputFormProps) {
   const t = translations[lang];
   // Main dimensions
   const [dInt, setDInt] = useState<number>(initialInput.dInt);
@@ -262,8 +263,11 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it' }: T
 
   return (
     <form onSubmit={handleCalculate} className="space-y-4">
-      {/* Tab Selectors */}
-      <div className="flex bg-sky-50/90 p-1.5 border-4 border-double border-emerald-800 rounded-xl text-xs font-bold gap-1.5 shadow-inner">
+      {/* Tab Selectors - Sticky, agganciata subito sotto la carta di navigazione fissa */}
+      <div
+        className="sticky z-10 flex bg-sky-50/90 p-1.5 border-4 border-double border-emerald-800 rounded-xl text-xs font-bold gap-1.5 shadow-inner"
+        style={{ top: stickyOffset }}
+      >
         <button
           type="button"
           onClick={() => setActiveTab('dims')}
