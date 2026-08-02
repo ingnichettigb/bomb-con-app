@@ -530,7 +530,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-neutral-900 mb-1 flex items-center gap-1 uppercase tracking-wide">
-                  Altezza Cono (h_cono)
+                  Altezza Cono compresa di colletto (h_cono)
                   <span className="text-[10px] text-neutral-700 font-bold">(mm)</span>
                   {lockedBy === 'angolo' && <span className="text-[9px] bg-neutral-200 text-neutral-700 px-1 py-0.5 rounded font-bold">CALCOLATO</span>}
                 </label>
