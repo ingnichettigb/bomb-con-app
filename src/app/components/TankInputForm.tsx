@@ -234,7 +234,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
         type: 'conico',
         sp: fondoSp || 5,
         hColletto: fondoColletto || 25,
-        hCono: fondoHCono || Math.round((dInt || 1000) / 2),
+        hCono: fondoHCono || Math.round((dInt || 1000) / 2 + (fondoColletto || 25)),
         rRaccordo: fondoRRaccordo || 30,
       },
       coperchio: {
