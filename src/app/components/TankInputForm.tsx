@@ -8,6 +8,7 @@ import { TankInput, HeadType, HeadConfig, ReportMeta } from '../types';
 import { Settings2, ShieldCheck, HelpCircle, Layers, Check, RefreshCw, RotateCcw, Info, AlertTriangle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Language, translations } from '../utils/translations';
+import { calculateHead } from '../utils/calculations';
 
 
 interface TankInputFormProps {
