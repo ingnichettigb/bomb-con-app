@@ -67,7 +67,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
     const h = initialInput.fondo.hCono ?? Math.round(r);
     const rracc = initialInput.fondo.rRaccordo ?? 30;
     if (r <= 0) return null;
-    const ang = angleFromHTot(h, r, rracc);
+    const ang = angleFromHTot(h, r, rracc, initialInput.fondo.hColletto);
     return ang != null ? Math.round(ang * 100) / 100 : null;
   });
   // lockedBy: 'h' means user typed altezza → angle is derived/disabled; 'angolo' means user typed angolo → altezza derived/disabled
@@ -129,7 +129,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
     const r = dInt / 2;
     if (r <= 0) return;
     if (lockedBy === 'h') {
-      const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo);
+      const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo, fondoColletto);
       if (ang != null) {
         setFondoAngolo(Math.round(ang * 100) / 100);
         setRaccordoError(null);
@@ -137,7 +137,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
         setRaccordoError("Il raggio di raccordo inserito è troppo grande per questa combinazione di diametro e altezza.");
       }
     } else if (lockedBy === 'angolo' && fondoAngolo != null) {
-      const h = hTotFromAngle(fondoAngolo, r, fondoRRaccordo);
+      const h = hTotFromAngle(fondoAngolo, r, fondoRRaccordo, fondoColletto);
       if (!isNaN(h)) {
         setFondoHCono(Math.max(1, Math.round(h)));
         setRaccordoError(null);
@@ -161,7 +161,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
     setLockedBy('h');
     const r = dInt / 2;
     if (r > 0) {
-      const ang = angleFromHTot(val, r, fondoRRaccordo);
+      const ang = angleFromHTot(val, r, fondoRRaccordo, fondoColletto);
       if (ang != null) {
         setFondoAngolo(Math.round(ang * 100) / 100);
         setRaccordoError(null);
@@ -189,7 +189,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
     setLockedBy('angolo');
     const r = dInt / 2;
     if (r > 0) {
-      const h = hTotFromAngle(val, r, fondoRRaccordo);
+      const h = hTotFromAngle(val, r, fondoRRaccordo, fondoColletto);
       if (!isNaN(h)) {
         setFondoHCono(Math.max(1, Math.round(h)));
         setRaccordoError(null);
@@ -496,7 +496,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
                       setLockedBy('h');
                       const r = dInt / 2;
                       if (r > 0 && fondoHCono > 0) {
-                        const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo);
+                        const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo, fondoColletto);
                         if (ang != null) setFondoAngolo(Math.round(ang * 100) / 100);
                       }
                     }}
@@ -516,7 +516,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
                       setLockedBy('angolo');
                       const r = dInt / 2;
                       if (r > 0 && fondoAngolo == null && fondoHCono > 0) {
-                        const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo);
+                        const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo, fondoColletto);
                         if (ang != null) setFondoAngolo(Math.round(ang * 100) / 100);
                       }
                     }}
