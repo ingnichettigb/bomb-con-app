@@ -8,6 +8,7 @@ import { TankInput, HeadType, HeadConfig, ReportMeta } from '../types';
 import { Settings2, ShieldCheck, HelpCircle, Layers, Check, RefreshCw, RotateCcw, Info, AlertTriangle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Language, translations } from '../utils/translations';
+import { calculateHead } from '../utils/calculations';
 
 
 interface TankInputFormProps {
@@ -32,40 +33,42 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
   const [fondoSp, setFondoSp] = useState<number>(initialInput.fondo.sp);
   const [fondoColletto, setFondoColletto] = useState<number>(initialInput.fondo.hColletto);
   const [fondoRRaccordo, setFondoRRaccordo] = useState<number>(initialInput.fondo.rRaccordo ?? 30);
-  const [fondoHCono, setFondoHCono] = useState<number>(initialInput.fondo.hCono ?? Math.round(initialInput.dInt / 2));
+  const [fondoHCono, setFondoHCono] = useState<number>(initialInput.fondo.hCono ?? Math.round(initialInput.dInt / 2 + initialInput.fondo.hColletto));
 
-  // Calcolo altezza totale del fondo conico (cono puro + raccordo) dato angolo, R_base, r_racc
-  const hTotFromAngle = (alfaDeg: number, R_base: number, r_racc: number): number => {
+  // NOTA: h_cono qui è l'ALTEZZA TOTALE DEL FONDO CONICO, COLLETTO INCLUSO.
+  // La geometria (cono puro + raccordo) lavora sulla quota netta = h_cono - h_colletto.
+  const hTotFromAngle = (alfaDeg: number, R_base: number, r_racc: number, hColl: number = 0): number => {
     const a = alfaDeg * Math.PI / 180;
     const Z = r_racc * Math.sin(a);
     const K = r_racc - Z;
     const Y = R_base - K;
     if (Y <= 0) return NaN;
-    return Y * Math.tan(a) + r_racc * Math.cos(a);
+    return Y * Math.tan(a) + r_racc * Math.cos(a) + hColl;
   };
-  // Bisezione: dato altezza totale target, trova angolo
-  const angleFromHTot = (H_target: number, R_base: number, r_racc: number): number | null => {
+  // Bisezione: dato altezza totale target (colletto incluso), trova angolo
+  const angleFromHTot = (H_target: number, R_base: number, r_racc: number, hColl: number = 0): number | null => {
     if (R_base <= 0) return null;
-    // Verifica raggiungibilità: max H a alfa→90° tende a infinito se Y>0. Y>0 richiede r_racc*(1-sin(alfa))<R_base.
+    const H_net = H_target - hColl;
+    if (H_net <= 0) return null;
     let lo = 0.01, hi = 89.99;
     for (let i = 0; i < 60; i++) {
       const mid = (lo + hi) / 2;
       const v = hTotFromAngle(mid, R_base, r_racc);
       if (isNaN(v)) { hi = mid; continue; }
-      if (v - H_target < 0) lo = mid; else hi = mid;
+      if (v - H_net < 0) lo = mid; else hi = mid;
     }
     const ang = (lo + hi) / 2;
     const check = hTotFromAngle(ang, R_base, r_racc);
-    if (isNaN(check) || Math.abs(check - H_target) > Math.max(2, H_target * 0.02)) return null;
+    if (isNaN(check) || Math.abs(check - H_net) > Math.max(2, H_net * 0.02)) return null;
     return ang;
   };
 
   const [fondoAngolo, setFondoAngolo] = useState<number | null>(() => {
     const r = initialInput.dInt / 2;
-    const h = initialInput.fondo.hCono ?? Math.round(r);
+    const h = initialInput.fondo.hCono ?? Math.round(r + initialInput.fondo.hColletto);
     const rracc = initialInput.fondo.rRaccordo ?? 30;
     if (r <= 0) return null;
-    const ang = angleFromHTot(h, r, rracc);
+    const ang = angleFromHTot(h, r, rracc, initialInput.fondo.hColletto);
     return ang != null ? Math.round(ang * 100) / 100 : null;
   });
   // lockedBy: 'h' means user typed altezza → angle is derived/disabled; 'angolo' means user typed angolo → altezza derived/disabled
@@ -127,7 +130,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
     const r = dInt / 2;
     if (r <= 0) return;
     if (lockedBy === 'h') {
-      const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo);
+      const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo, fondoColletto);
       if (ang != null) {
         setFondoAngolo(Math.round(ang * 100) / 100);
         setRaccordoError(null);
@@ -135,7 +138,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
         setRaccordoError("Il raggio di raccordo inserito è troppo grande per questa combinazione di diametro e altezza.");
       }
     } else if (lockedBy === 'angolo' && fondoAngolo != null) {
-      const h = hTotFromAngle(fondoAngolo, r, fondoRRaccordo);
+      const h = hTotFromAngle(fondoAngolo, r, fondoRRaccordo, fondoColletto);
       if (!isNaN(h)) {
         setFondoHCono(Math.max(1, Math.round(h)));
         setRaccordoError(null);
@@ -144,7 +147,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dInt, fondoRRaccordo]);
+  }, [dInt, fondoRRaccordo, fondoColletto]);
 
   const handleFondoHConoChange = (raw: string) => {
     if (raw === '') {
@@ -159,7 +162,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
     setLockedBy('h');
     const r = dInt / 2;
     if (r > 0) {
-      const ang = angleFromHTot(val, r, fondoRRaccordo);
+      const ang = angleFromHTot(val, r, fondoRRaccordo, fondoColletto);
       if (ang != null) {
         setFondoAngolo(Math.round(ang * 100) / 100);
         setRaccordoError(null);
@@ -187,7 +190,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
     setLockedBy('angolo');
     const r = dInt / 2;
     if (r > 0) {
-      const h = hTotFromAngle(val, r, fondoRRaccordo);
+      const h = hTotFromAngle(val, r, fondoRRaccordo, fondoColletto);
       if (!isNaN(h)) {
         setFondoHCono(Math.max(1, Math.round(h)));
         setRaccordoError(null);
@@ -232,7 +235,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
         type: 'conico',
         sp: fondoSp || 5,
         hColletto: fondoColletto || 25,
-        hCono: fondoHCono || Math.round((dInt || 1000) / 2),
+        hCono: fondoHCono || Math.round((dInt || 1000) / 2 + (fondoColletto || 25)),
         rRaccordo: fondoRRaccordo || 30,
       },
       coperchio: {
@@ -466,7 +469,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
                 <div className="text-[11px] text-neutral-800 leading-snug">
                   L'angolo <strong>α</strong> è misurato tra la <strong>linea orizzontale della base cilindrica</strong> e la <strong>parete obliqua del cono</strong>, nel punto di attacco.
                   <br />Non è l'angolo rispetto all'asse verticale.
-                  <br /><em>α = atan(h_cono / (D_int / 2))</em>
+                  <br /><em>h_cono (compresa di colletto) = cono + raccordo + colletto</em>
                 </div>
               </div>
             )}
@@ -494,13 +497,13 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
                       setLockedBy('h');
                       const r = dInt / 2;
                       if (r > 0 && fondoHCono > 0) {
-                        const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo);
+                        const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo, fondoColletto);
                         if (ang != null) setFondoAngolo(Math.round(ang * 100) / 100);
                       }
                     }}
                     className="accent-emerald-700"
                   />
-                  <span className="text-[11px] font-bold text-neutral-900">Altezza Cono</span>
+                  <span className="text-[11px] font-bold text-neutral-900">Altezza Cono compresa di colletto</span>
                 </label>
                 <label className={`flex items-center gap-2 p-2 rounded-md border-2 cursor-pointer transition-all ${
                   lockedBy === 'angolo' ? 'border-emerald-700 bg-white' : 'border-neutral-200 bg-neutral-50'
@@ -514,7 +517,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
                       setLockedBy('angolo');
                       const r = dInt / 2;
                       if (r > 0 && fondoAngolo == null && fondoHCono > 0) {
-                        const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo);
+                        const ang = angleFromHTot(fondoHCono, r, fondoRRaccordo, fondoColletto);
                         if (ang != null) setFondoAngolo(Math.round(ang * 100) / 100);
                       }
                     }}
@@ -528,7 +531,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-neutral-900 mb-1 flex items-center gap-1 uppercase tracking-wide">
-                  Altezza Cono (h_cono)
+                  Altezza Cono compresa di colletto (h_cono)
                   <span className="text-[10px] text-neutral-700 font-bold">(mm)</span>
                   {lockedBy === 'angolo' && <span className="text-[9px] bg-neutral-200 text-neutral-700 px-1 py-0.5 rounded font-bold">CALCOLATO</span>}
                 </label>
@@ -568,7 +571,36 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
                 />
               </div>
             </div>
-            <span className="text-[10px] text-neutral-600 block">Seleziona sopra il campo che vuoi compilare: l'altro verrà calcolato automaticamente. Con raccordo non nullo, α è ricavato numericamente dall'altezza totale.</span>
+            <span className="text-[10px] text-neutral-600 block">Seleziona sopra il campo che vuoi compilare: l'altro verrà calcolato automaticamente. <strong>L'altezza del cono è comprensiva di colletto</strong> (cono retto + raggio di raccordo + colletto cilindrico). Tutte le misure sono interne.</span>
+
+            {/* Verifica coerenza altezze interne */}
+            {(() => {
+              const hFondo = fondoHCono || 0;
+              const hVirola = lCil || 0;
+              let hCop = 0;
+              try {
+                const cop = calculateHead(dInt || 1000, {
+                  type: coperchioType,
+                  sp: coperchioSp || 5,
+                  hColletto: coperchioColletto || 25,
+                  ...(coperchioType === 'custom' ? { R_custom: coperchioRCustom, r_custom: coperchioRCustomVal } : {})
+                } as HeadConfig);
+                hCop = cop.H_int + (coperchioColletto || 0);
+              } catch { hCop = 0; }
+              const somma = hFondo + hVirola + hCop;
+              return (
+                <div className="p-2.5 bg-emerald-50 border border-emerald-300 rounded-lg text-[11px] text-emerald-950">
+                  <span className="block font-bold uppercase tracking-wide mb-1">Verifica coerenza altezze interne</span>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                    <span>Fondo conico (colletto incl.)</span><span className="font-bold text-right">{Math.round(hFondo)} mm</span>
+                    <span>Virola cilindrica</span><span className="font-bold text-right">{Math.round(hVirola)} mm</span>
+                    <span>Coperchio bombato (colletto incl.)</span><span className="font-bold text-right">{Math.round(hCop)} mm</span>
+                    <span className="border-t border-emerald-300 pt-0.5 font-bold">Altezza totale interna</span>
+                    <span className="border-t border-emerald-300 pt-0.5 font-bold text-right">{Math.round(somma)} mm</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div>
               <label className="block text-xs font-bold text-neutral-900 mb-1 flex items-center gap-1 uppercase tracking-wide">

@@ -13,7 +13,10 @@ export function calculateHead(dInt: number, config: HeadConfig): HeadCalculated 
   if (config.type === 'conico') {
     const R_base = dInt / 2;
     const r_racc = Math.max(0, config.rRaccordo ?? 30);
-    const H_totale_target = Math.max(1, config.hCono ?? R_base);
+    // config.hCono è l'ALTEZZA TOTALE DEL FONDO CONICO, COLLETTO INCLUSO.
+    // La geometria cono+raccordo lavora sulla quota netta (senza colletto).
+    const H_input_totale = Math.max(1, config.hCono ?? (R_base + config.hColletto));
+    const H_totale_target = Math.max(1, H_input_totale - config.hColletto);
 
     // Data H_totale_target = H_cono_puro + H_racc, ricava alfa via bisezione.
     // H_totale(alfa) = (R_base - r_racc*(1 - sin(alfa))) * tan(alfa) + r_racc*cos(alfa)
