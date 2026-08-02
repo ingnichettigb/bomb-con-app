@@ -468,7 +468,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
                 <div className="text-[11px] text-neutral-800 leading-snug">
                   L'angolo <strong>α</strong> è misurato tra la <strong>linea orizzontale della base cilindrica</strong> e la <strong>parete obliqua del cono</strong>, nel punto di attacco.
                   <br />Non è l'angolo rispetto all'asse verticale.
-                  <br /><em>α = atan(h_cono / (D_int / 2))</em>
+                  <br /><em>h_cono (compresa di colletto) = cono + raccordo + colletto</em>
                 </div>
               </div>
             )}
