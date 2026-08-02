@@ -502,7 +502,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
                     }}
                     className="accent-emerald-700"
                   />
-                  <span className="text-[11px] font-bold text-neutral-900">Altezza Cono</span>
+                  <span className="text-[11px] font-bold text-neutral-900">Altezza Cono compresa di colletto</span>
                 </label>
                 <label className={`flex items-center gap-2 p-2 rounded-md border-2 cursor-pointer transition-all ${
                   lockedBy === 'angolo' ? 'border-emerald-700 bg-white' : 'border-neutral-200 bg-neutral-50'
