@@ -32,7 +32,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
   const [fondoSp, setFondoSp] = useState<number>(initialInput.fondo.sp);
   const [fondoColletto, setFondoColletto] = useState<number>(initialInput.fondo.hColletto);
   const [fondoRRaccordo, setFondoRRaccordo] = useState<number>(initialInput.fondo.rRaccordo ?? 30);
-  const [fondoHCono, setFondoHCono] = useState<number>(initialInput.fondo.hCono ?? Math.round(initialInput.dInt / 2));
+  const [fondoHCono, setFondoHCono] = useState<number>(initialInput.fondo.hCono ?? Math.round(initialInput.dInt / 2 + initialInput.fondo.hColletto));
 
   // NOTA: h_cono qui è l'ALTEZZA TOTALE DEL FONDO CONICO, COLLETTO INCLUSO.
   // La geometria (cono puro + raccordo) lavora sulla quota netta = h_cono - h_colletto.
