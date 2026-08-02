@@ -146,7 +146,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dInt, fondoRRaccordo]);
+  }, [dInt, fondoRRaccordo, fondoColletto]);
 
   const handleFondoHConoChange = (raw: string) => {
     if (raw === '') {
