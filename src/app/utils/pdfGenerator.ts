@@ -551,7 +551,7 @@ export async function generateCalibrationPDF(
     const lblColletto = lang === 'en' ? 'Collar Height (h_colletto)' : lang === 'es' ? 'Altura Collarín (h_colletto)' : lang === 'de' ? 'Kragenhöhe (h_colletto)' : 'Altezza Colletto (h_colletto)';
     const lblSviluppo = lang === 'en' ? 'Sheet Unrolling Development' : lang === 'es' ? 'Desarrollo Desenrollado Chapa' : lang === 'de' ? 'Blechabwicklung' : 'Sviluppo Srotolamento Lamiera';
     const lblVolCyl = lang === 'en' ? 'Cylindrical Section Volume' : lang === 'es' ? 'Volumen Parte Cilíndrica' : lang === 'de' ? 'Volumen Zylinderteil' : 'Volume parte cilindrica';
-    const lblHcono = lang === 'en' ? 'Cone Height (h_cono) (mm)' : lang === 'es' ? 'Altura Cono (h_cono) (mm)' : lang === 'de' ? 'Konushöhe (h_cono) (mm)' : 'Altezza Cono (h_cono) (mm)';
+    const lblHcono = lang === 'en' ? 'Cone Height incl. collar (h_cono) (mm)' : lang === 'es' ? 'Altura Cono con collarín (h_cono) (mm)' : lang === 'de' ? 'Konushöhe inkl. Kragen (h_cono) (mm)' : 'Altezza Cono compresa di colletto (h_cono) (mm)';
     const lblGradi = lang === 'en' ? 'Inclination Degrees (°)' : lang === 'es' ? 'Grados de Inclinación (°)' : lang === 'de' ? 'Neigungswinkel (°)' : 'Gradi di Inclinazione (°)';
     const lblRracc = lang === 'en' ? 'Fillet Radius (r_raccordo)' : lang === 'es' ? 'Radio Empalme (r_raccordo)' : lang === 'de' ? 'Verrundungsradius (r_raccordo)' : 'Raggio Raccordo (r_raccordo)';
     const lblPesoTotLam = lang === 'en' ? 'Total Sheet Metal Weight' : lang === 'es' ? 'Peso Total Chapa' : lang === 'de' ? 'Gesamtes Blechgewicht' : 'Peso totale lamiera';
