@@ -571,7 +571,36 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
                 />
               </div>
             </div>
-            <span className="text-[10px] text-neutral-600 block">Seleziona sopra il campo che vuoi compilare: l'altro verrà calcolato automaticamente. Con raccordo non nullo, α è ricavato numericamente dall'altezza totale.</span>
+            <span className="text-[10px] text-neutral-600 block">Seleziona sopra il campo che vuoi compilare: l'altro verrà calcolato automaticamente. <strong>L'altezza del cono è comprensiva di colletto</strong> (cono retto + raggio di raccordo + colletto cilindrico). Tutte le misure sono interne.</span>
+
+            {/* Verifica coerenza altezze interne */}
+            {(() => {
+              const hFondo = fondoHCono || 0;
+              const hVirola = lCil || 0;
+              let hCop = 0;
+              try {
+                const cop = calculateHead(dInt || 1000, {
+                  type: coperchioType,
+                  sp: coperchioSp || 5,
+                  hColletto: coperchioColletto || 25,
+                  ...(coperchioType === 'custom' ? { R_custom: coperchioRCustom, r_custom: coperchioRCustomVal } : {})
+                } as HeadConfig);
+                hCop = cop.H_int + (coperchioColletto || 0);
+              } catch { hCop = 0; }
+              const somma = hFondo + hVirola + hCop;
+              return (
+                <div className="p-2.5 bg-emerald-50 border border-emerald-300 rounded-lg text-[11px] text-emerald-950">
+                  <span className="block font-bold uppercase tracking-wide mb-1">Verifica coerenza altezze interne</span>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                    <span>Fondo conico (colletto incl.)</span><span className="font-bold text-right">{Math.round(hFondo)} mm</span>
+                    <span>Virola cilindrica</span><span className="font-bold text-right">{Math.round(hVirola)} mm</span>
+                    <span>Coperchio bombato (colletto incl.)</span><span className="font-bold text-right">{Math.round(hCop)} mm</span>
+                    <span className="border-t border-emerald-300 pt-0.5 font-bold">Altezza totale interna</span>
+                    <span className="border-t border-emerald-300 pt-0.5 font-bold text-right">{Math.round(somma)} mm</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div>
               <label className="block text-xs font-bold text-neutral-900 mb-1 flex items-center gap-1 uppercase tracking-wide">
