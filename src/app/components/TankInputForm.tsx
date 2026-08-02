@@ -64,7 +64,7 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
 
   const [fondoAngolo, setFondoAngolo] = useState<number | null>(() => {
     const r = initialInput.dInt / 2;
-    const h = initialInput.fondo.hCono ?? Math.round(r);
+    const h = initialInput.fondo.hCono ?? Math.round(r + initialInput.fondo.hColletto);
     const rracc = initialInput.fondo.rRaccordo ?? 30;
     if (r <= 0) return null;
     const ang = angleFromHTot(h, r, rracc, initialInput.fondo.hColletto);
