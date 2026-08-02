@@ -34,29 +34,31 @@ export default function TankInputForm({ initialInput, onSubmit, lang = 'it', sti
   const [fondoRRaccordo, setFondoRRaccordo] = useState<number>(initialInput.fondo.rRaccordo ?? 30);
   const [fondoHCono, setFondoHCono] = useState<number>(initialInput.fondo.hCono ?? Math.round(initialInput.dInt / 2));
 
-  // Calcolo altezza totale del fondo conico (cono puro + raccordo) dato angolo, R_base, r_racc
-  const hTotFromAngle = (alfaDeg: number, R_base: number, r_racc: number): number => {
+  // NOTA: h_cono qui è l'ALTEZZA TOTALE DEL FONDO CONICO, COLLETTO INCLUSO.
+  // La geometria (cono puro + raccordo) lavora sulla quota netta = h_cono - h_colletto.
+  const hTotFromAngle = (alfaDeg: number, R_base: number, r_racc: number, hColl: number = 0): number => {
     const a = alfaDeg * Math.PI / 180;
     const Z = r_racc * Math.sin(a);
     const K = r_racc - Z;
     const Y = R_base - K;
     if (Y <= 0) return NaN;
-    return Y * Math.tan(a) + r_racc * Math.cos(a);
+    return Y * Math.tan(a) + r_racc * Math.cos(a) + hColl;
   };
-  // Bisezione: dato altezza totale target, trova angolo
-  const angleFromHTot = (H_target: number, R_base: number, r_racc: number): number | null => {
+  // Bisezione: dato altezza totale target (colletto incluso), trova angolo
+  const angleFromHTot = (H_target: number, R_base: number, r_racc: number, hColl: number = 0): number | null => {
     if (R_base <= 0) return null;
-    // Verifica raggiungibilità: max H a alfa→90° tende a infinito se Y>0. Y>0 richiede r_racc*(1-sin(alfa))<R_base.
+    const H_net = H_target - hColl;
+    if (H_net <= 0) return null;
     let lo = 0.01, hi = 89.99;
     for (let i = 0; i < 60; i++) {
       const mid = (lo + hi) / 2;
       const v = hTotFromAngle(mid, R_base, r_racc);
       if (isNaN(v)) { hi = mid; continue; }
-      if (v - H_target < 0) lo = mid; else hi = mid;
+      if (v - H_net < 0) lo = mid; else hi = mid;
     }
     const ang = (lo + hi) / 2;
     const check = hTotFromAngle(ang, R_base, r_racc);
-    if (isNaN(check) || Math.abs(check - H_target) > Math.max(2, H_target * 0.02)) return null;
+    if (isNaN(check) || Math.abs(check - H_net) > Math.max(2, H_net * 0.02)) return null;
     return ang;
   };
 
