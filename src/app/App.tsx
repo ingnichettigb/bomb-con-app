@@ -743,7 +743,7 @@ export default function App() {
 
             {/* STEP 3 - Configurazione geometrica */}
             {step === 3 && (
-              <TankInputForm key={formKey} initialInput={input} onSubmit={setInput} lang={lang} stickyOffset={stickyOffset} />
+              <GeometrySchema key={formKey} input={input} onChange={setInput} />
             )}
           </section>
 
