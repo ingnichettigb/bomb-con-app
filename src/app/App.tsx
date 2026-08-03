@@ -6,7 +6,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { TankInput, CalculationResult, CompilerInfo } from './types';
 import { calculateTank } from './utils/calculations';
-import TankInputForm from './components/TankInputForm';
 import GeometrySchema from './components/GeometrySchema';
 import ResultsDashboard from './components/ResultsDashboard';
 import CalibrationTable from './components/CalibrationTable';
