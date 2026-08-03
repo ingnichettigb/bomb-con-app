@@ -611,7 +611,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                   type="number"
                   value={angolo ?? ''}
                   onChange={(e) => setAngolo(Number(e.target.value))}
-                  style={{ ...editableDimStyle, width: '58px' }}
+                  style={{ ...editableDimStyle, width: '72px' }}
                   className="editable-dim"
                   title="Inclinazione del cono (gradi)"
                 />
