@@ -6,7 +6,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { TankInput, CalculationResult, CompilerInfo } from './types';
 import { calculateTank } from './utils/calculations';
-import TankInputForm from './components/TankInputForm';
+import GeometrySchema from './components/GeometrySchema';
 import ResultsDashboard from './components/ResultsDashboard';
 import CalibrationTable from './components/CalibrationTable';
 import SavedTanksList from './components/SavedTanksList';
@@ -743,7 +743,7 @@ export default function App() {
 
             {/* STEP 3 - Configurazione geometrica */}
             {step === 3 && (
-              <TankInputForm key={formKey} initialInput={input} onSubmit={setInput} lang={lang} stickyOffset={stickyOffset} />
+              <GeometrySchema key={formKey} input={input} onChange={setInput} />
             )}
           </section>
 
