@@ -604,7 +604,8 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
           {/* INCLINAZIONE CONO */}
           <g>
             <line x1={cx} y1={yApex} x2={rightX} y2={yCilBot} stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,3" />
-            <foreignObject x={cx - 110} y={yCilBot + 12} width="100" height="30">
+            <text x={rightX + 14} y={yCilBot + 28} fontSize="13" fontWeight="600" fill="#000000">Inclin.</text>
+            <foreignObject x={rightX + 14} y={yCilBot + 34} width="110" height="30">
               <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                 <input
                   type="number"
