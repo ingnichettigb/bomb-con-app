@@ -63,7 +63,7 @@ const fmtL = (n: number): string =>
 /* ---------- sub components ---------- */
 
 const editableDimStyle: React.CSSProperties = {
-  width: '74px',
+  width: '84px',
   fontSize: '14px',
   fontWeight: 700,
   color: '#000000',
@@ -111,7 +111,7 @@ function MiniField({
         className={readOnly ? '' : 'editable-dim'}
         title={readOnly ? 'Calcolato automaticamente dallo standard scelto' : undefined}
         style={{
-          width: width || '66px',
+          width: width || '78px',
           fontSize: '14px',
           fontWeight: 700,
           color: '#000000',
@@ -336,7 +336,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const chainX = 640;
   const dim4X = 730;
 
-  const boxW = 182;
+  const boxW = 196;
   const box1H = 176;
   const box1Y = Math.max(4, Math.min(callout1Y - 40, drawH - box1H - 4));
   const box3H = 155;
