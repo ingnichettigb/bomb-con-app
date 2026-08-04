@@ -149,7 +149,7 @@ function DimLine({
       <text
         x={x + 16}
         y={midY}
-        fontSize="15"
+        fontSize="13"
         fontWeight={700}
         fill="#000000"
         textAnchor="middle"
@@ -399,7 +399,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 onChange={(e) => setPreset(e.target.value as Preset)}
                 style={{
                   width: '100%',
-                  fontSize: '13px',
+                  fontSize: '11px',
                   fontWeight: 600,
                   color: '#0f172a',
                   background: '#ffffff',
@@ -543,7 +543,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
             <line x1={leftX} y1={yCilMid + 46} x2={rightX} y2={yCilMid + 46} stroke="#334155" strokeWidth="1" />
             <line x1={leftX} y1={yCilMid + 40} x2={leftX} y2={yCilMid + 52} stroke="#334155" strokeWidth="1" />
             <line x1={rightX} y1={yCilMid + 40} x2={rightX} y2={yCilMid + 52} stroke="#334155" strokeWidth="1" />
-            <text x={cx - 58} y={yCilMid + 33} textAnchor="end" fontSize="15" fontWeight="700" fill="#000000">Ø</text>
+            <text x={cx - 58} y={yCilMid + 33} textAnchor="end" fontSize="13" fontWeight="700" fill="#000000">Ø</text>
             <foreignObject x={cx - 46} y={yCilMid + 14} width="92" height="24">
               <input
                 type="number"
