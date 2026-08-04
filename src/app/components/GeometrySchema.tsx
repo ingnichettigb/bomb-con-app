@@ -637,8 +637,8 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 </text>
                 {/* richiamo dal riquadro al vertice */}
                 <line
-                  x1={angBoxX}
-                  y1={angBoxY + angBoxH / 2}
+                  x1={angBoxX + angBoxW / 2}
+                  y1={angBoxY}
                   x2={vx}
                   y2={vy}
                   stroke="#0f766e"
