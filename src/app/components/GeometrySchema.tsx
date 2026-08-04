@@ -605,8 +605,8 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
           {(() => {
             const angBoxW = 132;
             const angBoxH = 50;
-            const angBoxX = drawW - angBoxW - 12;
-            const angBoxY = drawH - angBoxH - 26;
+            const angBoxX = 470;
+            const angBoxY = drawH - angBoxH - 32;
             // vertice dell'angolo: incrocio virola verticale / linea inclinata destra del cono
             const vx = rightX;
             const vy = yCilBot;
@@ -637,8 +637,8 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 </text>
                 {/* richiamo dal riquadro al vertice */}
                 <line
-                  x1={angBoxX}
-                  y1={angBoxY + angBoxH / 2}
+                  x1={angBoxX + angBoxW / 2}
+                  y1={angBoxY}
                   x2={vx}
                   y2={vy}
                   stroke="#0f766e"
