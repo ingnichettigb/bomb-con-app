@@ -126,6 +126,23 @@ export default function App() {
   const [input, setInput] = useState<TankInput>(defaultInput);
   const [formKey, setFormKey] = useState<number>(0);
   const [step, setStep] = useState<number>(1);
+  const stepStripRef = useRef<HTMLDivElement>(null);
+
+  const scrollStrip = (dir: number) => {
+    const el = stepStripRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.max(160, el.clientWidth * 0.6), behavior: 'smooth' });
+  };
+
+  // Keep the active step button horizontally centered in the carousel
+  useEffect(() => {
+    const el = stepStripRef.current;
+    if (!el) return;
+    const btn = el.querySelector<HTMLElement>(`[data-step="${step}"]`);
+    if (!btn) return;
+    el.scrollTo({ left: btn.offsetLeft - el.clientWidth / 2 + btn.offsetWidth / 2, behavior: 'smooth' });
+  }, [step, lang]);
+
 
   useEffect(() => {
     const headerEl = headerRef.current;
