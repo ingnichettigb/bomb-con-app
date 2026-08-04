@@ -601,24 +601,69 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
             </text>
           </g>
 
-          {/* INCLINAZIONE CONO */}
-          <g>
-            <line x1={cx} y1={yApex} x2={rightX} y2={yCilBot} stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,3" />
-            <text x={rightX + 14} y={yCilBot + 28} fontSize="13" fontWeight="600" fill="#000000">Inclin.</text>
-            <foreignObject x={rightX + 14} y={yCilBot + 34} width="110" height="30">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                <input
-                  type="number"
-                  value={angolo ?? ''}
-                  onChange={(e) => setAngolo(Number(e.target.value))}
-                  style={{ ...editableDimStyle, width: '72px' }}
-                  className="editable-dim"
-                  title="Inclinazione del cono (gradi)"
+          {/* INCLINAZIONE CONO — riquadro ancorato in basso a destra */}
+          {(() => {
+            const angBoxW = 132;
+            const angBoxH = 50;
+            const angBoxX = drawW - angBoxW - 12;
+            const angBoxY = drawH - angBoxH - 26;
+            // vertice dell'angolo: incrocio virola verticale / linea inclinata destra del cono
+            const vx = rightX;
+            const vy = yCilBot;
+            const dxS = cx - rightX;
+            const dyS = yApex - yCilBot;
+            const lenS = Math.hypot(dxS, dyS) || 1;
+            const rArc = 34;
+            const ax = vx - rArc; // direzione orizzontale (verso l'interno)
+            const ay = vy;
+            const bx = vx + (dxS / lenS) * rArc;
+            const by = vy + (dyS / lenS) * rArc;
+            const labX = vx - rArc * 0.72;
+            const labY = vy + rArc * 0.46;
+            return (
+              <g>
+                {/* linea inclinata di riferimento */}
+                <line x1={cx} y1={yApex} x2={rightX} y2={yCilBot} stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,3" />
+                {/* semicerchio dell'angolo */}
+                <path
+                  d={`M ${ax} ${ay} A ${rArc} ${rArc} 0 0 0 ${bx} ${by}`}
+                  fill="none"
+                  stroke="#0f766e"
+                  strokeWidth="1.4"
                 />
-                <span style={{ fontSize: '15px', color: '#000000' }}>°</span>
-              </div>
-            </foreignObject>
-          </g>
+                <circle cx={vx} cy={vy} r="2.4" fill="#0f766e" />
+                <text x={labX} y={labY} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
+                  {angolo != null ? `${angolo.toFixed(1)}°` : ''}
+                </text>
+                {/* richiamo dal riquadro al vertice */}
+                <line
+                  x1={angBoxX}
+                  y1={angBoxY + angBoxH / 2}
+                  x2={vx}
+                  y2={vy}
+                  stroke="#0f766e"
+                  strokeWidth="1"
+                  strokeDasharray="4,3"
+                />
+                <rect x={angBoxX} y={angBoxY} width={angBoxW} height={angBoxH} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
+                <text x={angBoxX + 8} y={angBoxY + 16} fontSize="12" fontWeight="700" fill="#000000">Inclin. cono</text>
+                <foreignObject x={angBoxX + 6} y={angBoxY + 21} width={angBoxW - 12} height="26">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <input
+                      type="number"
+                      value={angolo ?? ''}
+                      onChange={(e) => setAngolo(Number(e.target.value))}
+                      style={{ ...editableDimStyle, width: '82px' }}
+                      className="editable-dim"
+                      title="Inclinazione del cono (gradi)"
+                    />
+                    <span style={{ fontSize: '14px', color: '#000000' }}>°</span>
+                  </div>
+                </foreignObject>
+              </g>
+            );
+          })()}
+
 
           <text x={drawW - 8} y={drawH - 8} textAnchor="end" fontSize="13" fill="#000000">
             Tutte le misure in mm (interne)
