@@ -354,16 +354,147 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#ebf2ee] text-neutral-900 font-sans antialiased">
       {/* HEADER SECTION - Minimal & Sticky - Hidden on Print */}
-      <header ref={headerRef} className="sticky top-0 z-30 bg-white border-b border-neutral-200 py-2.5 px-6 print:hidden">
-        <div className="max-w-7xl mx-auto flex items-center gap-3">
-          <div className="p-2 bg-emerald-900 text-white rounded-xl shadow-xs">
-            <Cylinder className="w-5 h-5 animate-pulse text-emerald-300" />
+      <header ref={headerRef} className="sticky top-0 z-30 bg-white border-b border-neutral-200 py-2 px-4 md:px-6 print:hidden">
+        <div className="max-w-7xl mx-auto grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="p-2 bg-emerald-900 text-white rounded-xl shadow-xs shrink-0">
+              <Cylinder className="w-5 h-5 animate-pulse text-emerald-300" />
+            </div>
+            <h1 className="truncate text-base md:text-lg font-black tracking-tight text-emerald-950 uppercase">
+              {t.appName}
+            </h1>
           </div>
-          <h1 className="text-lg font-black tracking-tight text-emerald-950 uppercase">
-            {t.appName}
-          </h1>
+
+          {/* Header actions: PDF, Condensed PDF, Language, Info, Close */}
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+            <button
+              type="button"
+              onClick={() => generateCalibrationPDF(result, lang, compilerInfo, false, reportNumber)}
+              className="bg-emerald-800 hover:bg-emerald-900 text-white font-extrabold py-1.5 px-2.5 rounded-lg text-[11px] shadow-xs transition-all flex items-center gap-1.5 cursor-pointer border border-emerald-950"
+            >
+              <Printer className="w-3.5 h-3.5 text-emerald-100" />
+              {lang === 'en' ? 'Print PDF' : lang === 'es' ? 'Imprimir PDF' : lang === 'de' ? 'PDF Drucken' : 'Stampa PDF'}
+            </button>
+            <button
+              type="button"
+              onClick={() => generateCalibrationPDF(result, lang, compilerInfo, true, reportNumber)}
+              className="bg-teal-700 hover:bg-teal-800 text-white font-extrabold py-1.5 px-2.5 rounded-lg text-[11px] shadow-xs transition-all flex items-center gap-1.5 cursor-pointer border border-teal-900"
+            >
+              <Printer className="w-3.5 h-3.5 text-teal-100" />
+              {lang === 'en' ? 'Condensed PDF' : lang === 'es' ? 'PDF Condensado' : lang === 'de' ? 'Kompakt PDF' : 'PDF condensata'}
+            </button>
+
+            {/* Language Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsLangMenuOpen((v) => !v)}
+                className="flex items-center gap-1.5 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold uppercase text-neutral-700 transition-all cursor-pointer"
+                title="Seleziona Lingua / Select Language"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>{langOptions.find((o) => o.code === lang)?.flag}</span>
+                <span>{lang.toUpperCase()}</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${isLangMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isLangMenuOpen && (
+                <div className="absolute right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-md overflow-hidden z-40 min-w-[110px]">
+                  {langOptions.map((item) => (
+                    <button
+                      key={item.code}
+                      type="button"
+                      onClick={() => { setLang(item.code); setIsLangMenuOpen(false); }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold uppercase text-left transition-all cursor-pointer ${
+                        lang === item.code ? 'bg-emerald-900 text-white' : 'text-neutral-700 hover:bg-neutral-100'
+                      }`}
+                    >
+                      <span>{item.flag}</span>
+                      <span>{item.code.toUpperCase()}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Information Button */}
+            <button
+              type="button"
+              id="informazione"
+              onClick={() => setIsInfoModalOpen(true)}
+              className="bg-emerald-800 hover:bg-emerald-900 text-white py-1.5 px-2.5 rounded-lg border border-emerald-950 transition-all flex items-center justify-center gap-1.5 shadow-xs hover:scale-102 cursor-pointer font-bold text-[11px]"
+              title={lang === 'en' ? 'Program Manual & Information' : 'Manuale e Informazioni'}
+            >
+              <Info className="w-3.5 h-3.5 text-emerald-200" />
+              <span>Info</span>
+            </button>
+
+            {/* Close Application Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window === 'undefined') return;
+                const msg = lang === 'en' ? 'Close the application?' : lang === 'es' ? '¿Cerrar la aplicación?' : lang === 'de' ? 'Anwendung schließen?' : 'Chiudere l\'applicazione?';
+                if (!window.confirm(msg)) return;
+                window.close();
+                window.setTimeout(() => setAppClosed(true), 150);
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white py-1.5 px-2.5 rounded-lg border border-red-800 transition-all flex items-center justify-center gap-1.5 shadow-xs hover:scale-102 cursor-pointer font-bold text-[11px]"
+              title={lang === 'it' ? 'Chiudi applicazione' : lang === 'en' ? 'Close application' : lang === 'es' ? 'Cerrar aplicación' : 'Anwendung schließen'}
+            >
+              <X className="w-3.5 h-3.5 text-red-100" />
+              <span>
+                {lang === 'it' ? 'Chiudi' :
+                 lang === 'en' ? 'Close' :
+                 lang === 'es' ? 'Cerrar' :
+                 'Schließen'}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* STEP CAROUSEL - single scrollable row, active step auto-centered */}
+        <div className="max-w-7xl mx-auto mt-1.5 flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => scrollStrip(-1)}
+            aria-label="Scorri a sinistra"
+            className="shrink-0 w-6 h-7 grid place-items-center rounded-md bg-emerald-800 hover:bg-emerald-700 text-white cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <div
+            ref={stepStripRef}
+            className="flex-1 min-w-0 overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <div className="flex gap-1.5 w-max px-1 py-0.5">
+              {stepLabels.map((label, i) => (
+                <button
+                  key={label}
+                  type="button"
+                  data-step={i + 1}
+                  onClick={() => setStep(i + 1)}
+                  className={`whitespace-nowrap px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase border transition-all cursor-pointer ${
+                    step === i + 1
+                      ? 'bg-emerald-800 text-white border-emerald-950 shadow-xs'
+                      : 'bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100'
+                  }`}
+                >
+                  {i + 1}. {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => scrollStrip(1)}
+            aria-label="Scorri a destra"
+            className="shrink-0 w-6 h-7 grid place-items-center rounded-md bg-emerald-800 hover:bg-emerald-700 text-white cursor-pointer"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       </header>
+
 
       {/* PRIMARY CONTAINER */}
       <main className="max-w-7xl mx-auto p-4 md:p-6 print:p-0">
