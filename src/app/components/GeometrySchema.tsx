@@ -63,8 +63,8 @@ const fmtL = (n: number): string =>
 /* ---------- sub components ---------- */
 
 const editableDimStyle: React.CSSProperties = {
-  width: '92px',
-  fontSize: '18px',
+  width: '84px',
+  fontSize: '14px',
   fontWeight: 700,
   color: '#000000',
   background: '#ffffff',
@@ -94,10 +94,10 @@ function MiniField({
     <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
       <span
         style={{
-          fontSize: '13px',
+          fontSize: '11px',
           color: '#000000',
           whiteSpace: 'nowrap',
-          width: labelWidth || '62px',
+          width: labelWidth || '50px',
           flexShrink: 0,
         }}
       >
@@ -111,8 +111,8 @@ function MiniField({
         className={readOnly ? '' : 'editable-dim'}
         title={readOnly ? 'Calcolato automaticamente dallo standard scelto' : undefined}
         style={{
-          width: width || '82px',
-          fontSize: '18px',
+          width: width || '78px',
+          fontSize: '14px',
           fontWeight: 700,
           color: '#000000',
           background: readOnly ? '#f1f5f9' : '#ffffff',
@@ -149,7 +149,7 @@ function DimLine({
       <text
         x={x + 16}
         y={midY}
-        fontSize="15"
+        fontSize="13"
         fontWeight={700}
         fill="#000000"
         textAnchor="middle"
@@ -336,16 +336,16 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const chainX = 640;
   const dim4X = 730;
 
-  const boxW = 224;
-  const box1H = 214;
+  const boxW = 196;
+  const box1H = 176;
   const box1Y = Math.max(4, Math.min(callout1Y - 40, drawH - box1H - 4));
-  const box3H = 190;
+  const box3H = 155;
   const box3Y = Math.max(4, Math.min(drawH - box3H - 6, callout3Y - box3H / 2));
-  const box2H = 104;
+  const box2H = 86;
   const box2Y = yCilMid - box2H / 2;
 
   const boxCapTotW = Math.max(150, Math.min(230, (rightX - leftX) * 0.86));
-  const boxCapTotH = 74;
+  const boxCapTotH = 60;
   const boxCapTotX = cx - boxCapTotW / 2;
   const boxCapTotY = yCilMid - 20 - boxCapTotH;
 
@@ -393,13 +393,13 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
               strokeWidth="1"
               strokeDasharray="3,3"
             />
-            <foreignObject x={14} y={box1Y + 6} width={boxW - 20} height="28">
+            <foreignObject x={12} y={box1Y + 5} width={boxW - 18} height="24">
               <select
                 value={presetCoperchio}
                 onChange={(e) => setPreset(e.target.value as Preset)}
                 style={{
                   width: '100%',
-                  fontSize: '13px',
+                  fontSize: '11px',
                   fontWeight: 600,
                   color: '#0f172a',
                   background: '#ffffff',
@@ -416,7 +416,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 <option value="custom">Fuori Standard</option>
               </select>
             </foreignObject>
-            <foreignObject x={14} y={box1Y + 40} width={boxW - 20} height="28">
+            <foreignObject x={12} y={box1Y + 31} width={boxW - 18} height="24">
               <MiniField
                 label="R grande"
                 value={Math.round(R_disp * 10) / 10}
@@ -424,7 +424,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 readOnly={!isCustomHead}
               />
             </foreignObject>
-            <foreignObject x={14} y={box1Y + 72} width={boxW - 20} height="28">
+            <foreignObject x={12} y={box1Y + 57} width={boxW - 18} height="24">
               <MiniField
                 label="r piccolo"
                 value={Math.round(r_disp * 10) / 10}
@@ -432,23 +432,23 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 readOnly={!isCustomHead}
               />
             </foreignObject>
-            <foreignObject x={14} y={box1Y + 104} width={boxW - 20} height="28">
+            <foreignObject x={12} y={box1Y + 83} width={boxW - 18} height="24">
               <MiniField label="Colletto" value={hCollettoCoperchio} onChange={(v) => patchCoperchio({ hColletto: v })} />
             </foreignObject>
-            <foreignObject x={14} y={box1Y + 136} width={boxW - 20} height="28">
+            <foreignObject x={12} y={box1Y + 109} width={boxW - 18} height="24">
               <MiniField label="Sp." value={input.coperchio.sp} onChange={(v) => patchCoperchio({ sp: v })} />
             </foreignObject>
-            <text x={6 + boxW / 2} y={box1Y + 184} textAnchor="middle" fontSize="13" fontWeight="600" fill="#000000">
+            <text x={6 + boxW / 2} y={box1Y + 148} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Coperchio bombato — litri
             </text>
-            <text x={6 + boxW / 2} y={box1Y + 204} textAnchor="middle" fontSize="15" fontWeight="700" fill="#0f766e">
+            <text x={6 + boxW / 2} y={box1Y + 166} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
               {result ? fmtL(result.volumeCoperchio) : '—'}
             </text>
           </g>
 
           {/* RIQUADRO 2 — VIROLA */}
           <g>
-            <rect x={6} y={box2Y} width={180} height={box2H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
+            <rect x={6} y={box2Y} width={146} height={box2H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
             <line
               x1={186}
               y1={yCilMid}
@@ -458,20 +458,20 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
               strokeWidth="1"
               strokeDasharray="3,3"
             />
-            <text x={96} y={box2Y + 22} textAnchor="middle" fontSize="13" fontWeight="600" fill="#000000">
+            <text x={79} y={box2Y + 18} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Sezione cilindrica
             </text>
-            <text x={96} y={box2Y + 52} textAnchor="middle" fontSize="13" fontWeight="600" fill="#000000">
+            <text x={79} y={box2Y + 43} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Capacità in litri
             </text>
-            <text x={96} y={box2Y + 78} textAnchor="middle" fontSize="15" fontWeight="700" fill="#0f766e">
+            <text x={79} y={box2Y + 65} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
               {result ? fmtL(result.volumeCilindro) : '—'}
             </text>
           </g>
 
           {/* RIQUADRO 3 — FONDO CONICO */}
           <g>
-            <rect x={6} y={box3Y} width={196} height={box3H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
+            <rect x={6} y={box3Y} width={158} height={box3H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
             <line
               x1={202}
               y1={Math.min(Math.max(callout3Y, box3Y + 20), box3Y + box3H - 18)}
@@ -481,10 +481,10 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
               strokeWidth="1"
               strokeDasharray="3,3"
             />
-            <text x={104} y={box3Y + 22} textAnchor="middle" fontSize="13" fontWeight="600" fill="#000000">
+            <text x={85} y={box3Y + 18} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Fondo conico
             </text>
-            <foreignObject x={12} y={box3Y + 32} width="180" height="28">
+            <foreignObject x={10} y={box3Y + 26} width="146" height="24">
               <MiniField
                 label="R racc."
                 value={rRaccordoCono}
@@ -493,7 +493,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 width="72px"
               />
             </foreignObject>
-            <foreignObject x={12} y={box3Y + 64} width="180" height="28">
+            <foreignObject x={10} y={box3Y + 52} width="146" height="24">
               <MiniField
                 label="Colletto"
                 value={hCollettoCono}
@@ -502,7 +502,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 width="72px"
               />
             </foreignObject>
-            <foreignObject x={12} y={box3Y + 96} width="180" height="28">
+            <foreignObject x={10} y={box3Y + 78} width="146" height="24">
               <MiniField
                 label="Sp."
                 value={input.fondo.sp}
@@ -511,10 +511,10 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 width="72px"
               />
             </foreignObject>
-            <text x={104} y={box3Y + 152} textAnchor="middle" fontSize="13" fontWeight="600" fill="#000000">
+            <text x={85} y={box3Y + 124} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Fondo conico — litri
             </text>
-            <text x={104} y={box3Y + 174} textAnchor="middle" fontSize="15" fontWeight="700" fill="#0f766e">
+            <text x={85} y={box3Y + 142} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
               {result ? fmtL(result.volumeFondo) : '—'}
             </text>
           </g>
@@ -543,8 +543,8 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
             <line x1={leftX} y1={yCilMid + 46} x2={rightX} y2={yCilMid + 46} stroke="#334155" strokeWidth="1" />
             <line x1={leftX} y1={yCilMid + 40} x2={leftX} y2={yCilMid + 52} stroke="#334155" strokeWidth="1" />
             <line x1={rightX} y1={yCilMid + 40} x2={rightX} y2={yCilMid + 52} stroke="#334155" strokeWidth="1" />
-            <text x={cx - 58} y={yCilMid + 33} textAnchor="end" fontSize="15" fontWeight="700" fill="#000000">Ø</text>
-            <foreignObject x={cx - 52} y={yCilMid + 14} width="110" height="28">
+            <text x={cx - 58} y={yCilMid + 33} textAnchor="end" fontSize="13" fontWeight="700" fill="#000000">Ø</text>
+            <foreignObject x={cx - 46} y={yCilMid + 14} width="92" height="24">
               <input
                 type="number"
                 value={dInt}
@@ -565,7 +565,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
             <text x={chainX + 10} y={(yDomeTop + yCilTop) / 2 + 5} fontSize="14" fontWeight="600" fill="#000000">
               {fmt(hCoperchio_calc)}
             </text>
-            <foreignObject x={chainX + 8} y={yCilMid - 14} width="110" height="28">
+            <foreignObject x={chainX + 8} y={yCilMid - 12} width="92" height="24">
               <input
                 type="number"
                 value={lCil}
@@ -575,7 +575,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 title="Altezza sezione cilindrica (mm)"
               />
             </foreignObject>
-            <foreignObject x={chainX + 8} y={(yCilBot + yApex) / 2 - 14} width="110" height="28">
+            <foreignObject x={chainX + 8} y={(yCilBot + yApex) / 2 - 12} width="92" height="24">
               <input
                 type="number"
                 value={hCono}
@@ -593,18 +593,18 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
           {/* CAPACITÀ TOTALE */}
           <g>
             <rect x={boxCapTotX} y={boxCapTotY} width={boxCapTotW} height={boxCapTotH} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
-            <text x={boxCapTotX + boxCapTotW / 2} y={boxCapTotY + 28} textAnchor="middle" fontSize="15" fontWeight="600" fill="#000000">
+            <text x={boxCapTotX + boxCapTotW / 2} y={boxCapTotY + 23} textAnchor="middle" fontSize="12" fontWeight="600" fill="#000000">
               Capacità totale lt.
             </text>
-            <text x={boxCapTotX + boxCapTotW / 2} y={boxCapTotY + 56} textAnchor="middle" fontSize="18" fontWeight="700" fill="#0f766e">
+            <text x={boxCapTotX + boxCapTotW / 2} y={boxCapTotY + 45} textAnchor="middle" fontSize="15" fontWeight="700" fill="#0f766e">
               {result ? fmtL(result.volumeTotale) : '—'}
             </text>
           </g>
 
           {/* INCLINAZIONE CONO — riquadro ancorato in basso a destra */}
           {(() => {
-            const angBoxW = 132;
-            const angBoxH = 50;
+            const angBoxW = 108;
+            const angBoxH = 42;
             const angBoxX = 470;
             const angBoxY = drawH - angBoxH - 32;
             // vertice dell'angolo: incrocio virola verticale / linea inclinata destra del cono
@@ -646,8 +646,8 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                   strokeDasharray="4,3"
                 />
                 <rect x={angBoxX} y={angBoxY} width={angBoxW} height={angBoxH} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
-                <text x={angBoxX + 8} y={angBoxY + 16} fontSize="12" fontWeight="700" fill="#000000">Inclin. cono</text>
-                <foreignObject x={angBoxX + 6} y={angBoxY + 21} width={angBoxW - 12} height="26">
+                <text x={angBoxX + 7} y={angBoxY + 14} fontSize="10" fontWeight="700" fill="#000000">Inclin. cono</text>
+                <foreignObject x={angBoxX + 5} y={angBoxY + 18} width={angBoxW - 10} height="22">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                     <input
                       type="number"
@@ -657,7 +657,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                       className="editable-dim"
                       title="Inclinazione del cono (gradi)"
                     />
-                    <span style={{ fontSize: '14px', color: '#000000' }}>°</span>
+                    <span style={{ fontSize: '11px', color: '#000000' }}>°</span>
                   </div>
                 </foreignObject>
               </g>
