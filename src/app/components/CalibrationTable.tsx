@@ -887,32 +887,32 @@ export default function CalibrationTable({ result, lang = 'it', compilerInfo }: 
   return (
     <div className="space-y-4">
       {/* Table Toolbar */}
-      <div className="flex flex-row items-center justify-between gap-2 bg-white p-2.5 border-4 border-double border-emerald-800 rounded-xl shadow-xs overflow-hidden">
-        <div className="flex items-center gap-1.5 bg-white border border-neutral-300 rounded-lg px-2 py-1 shadow-xs w-32 sm:w-36 shrink-0">
-          <Search className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+      <div className="flex flex-row items-center justify-between gap-1.5 bg-white p-2 border-4 border-double border-emerald-800 rounded-xl shadow-xs overflow-hidden">
+        <div className="flex items-center gap-1 bg-white border border-neutral-300 rounded-lg px-1.5 py-0.5 shadow-xs w-24 sm:w-28 shrink-0">
+          <Search className="w-3 h-3 text-neutral-400 shrink-0" />
           <input
             type="text"
             placeholder={
-              lang === 'en' ? 'Search height...' :
-              lang === 'es' ? 'Buscar altura...' :
-              lang === 'de' ? 'Höhe suchen...' :
-              'Cerca altezza...'
+              lang === 'en' ? 'Search...' :
+              lang === 'es' ? 'Buscar...' :
+              lang === 'de' ? 'Suchen...' :
+              'Cerca...'
             }
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setListPage(1);
             }}
-            className="text-[11px] bg-transparent w-full text-neutral-900 placeholder-neutral-400 focus:outline-hidden"
+            className="text-[10px] bg-transparent w-full text-neutral-900 placeholder-neutral-400 focus:outline-hidden"
           />
         </div>
 
-        <div className="flex flex-row items-center gap-1.5">
+        <div className="flex flex-row items-center gap-1">
           {/* View Toggle */}
-          <div className="flex bg-neutral-200 p-0.5 rounded-lg text-[11px] font-semibold text-neutral-600 shrink-0">
+          <div className="flex bg-neutral-200 p-0.5 rounded-lg text-[10px] font-semibold text-neutral-600 shrink-0">
             <button
               onClick={() => setViewType('grid')}
-              className={`flex items-center gap-1 py-1 px-2 rounded-md transition-all cursor-pointer ${
+              className={`flex items-center gap-0.5 py-0.5 px-1.5 rounded-md transition-all cursor-pointer ${
                 viewType === 'grid' ? 'bg-white text-neutral-900 shadow-xs' : 'hover:bg-neutral-300'
               }`}
               title={
@@ -922,17 +922,17 @@ export default function CalibrationTable({ result, lang = 'it', compilerInfo }: 
                 'Vista Griglia (Strapping)'
               }
             >
-              <Grid className="w-3.5 h-3.5" />
+              <Grid className="w-3 h-3" />
               <span>
-                {lang === 'en' ? 'Standard Grid' :
-                 lang === 'es' ? 'Rejilla Estándar' :
-                 lang === 'de' ? 'Standard-Raster' :
-                 'Griglia Standard'}
+                {lang === 'en' ? 'Grid' :
+                 lang === 'es' ? 'Rejilla' :
+                 lang === 'de' ? 'Raster' :
+                 'Griglia'}
               </span>
             </button>
             <button
               onClick={() => setViewType('list')}
-              className={`flex items-center gap-1 py-1 px-2 rounded-md transition-all cursor-pointer ${
+              className={`flex items-center gap-0.5 py-0.5 px-1.5 rounded-md transition-all cursor-pointer ${
                 viewType === 'list' ? 'bg-white text-neutral-900 shadow-xs' : 'hover:bg-neutral-300'
               }`}
               title={
@@ -942,52 +942,60 @@ export default function CalibrationTable({ result, lang = 'it', compilerInfo }: 
                 'Vista Lista Lineare'
               }
             >
-              <List className="w-3.5 h-3.5" />
+              <List className="w-3 h-3" />
               <span>
-                {lang === 'en' ? 'Linear List' :
-                 lang === 'es' ? 'Lista Lineal' :
-                 lang === 'de' ? 'Lineare Liste' :
-                 'Lista Lineare'}
+                {lang === 'en' ? 'List' :
+                 lang === 'es' ? 'Lineal' :
+                 lang === 'de' ? 'Liste' :
+                 'Lineare'}
               </span>
             </button>
           </div>
 
           {/* Export & Print */}
-          <div className="flex gap-1 shrink-0">
+          <div className="flex gap-0.5 shrink-0">
             <button
               onClick={viewType === 'grid' ? handleExportGridCSV : handleExportListCSV}
-              className="bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 text-[11px] font-bold py-1 px-2 rounded-lg shadow-xs flex items-center gap-1 cursor-pointer"
+              className="bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 text-[10px] font-bold py-0.5 px-1.5 rounded-lg shadow-xs flex items-center gap-0.5 cursor-pointer"
+              title={
+                lang === 'en' ? 'Export CSV' :
+                lang === 'es' ? 'Exportar CSV' :
+                lang === 'de' ? 'CSV Exportieren' :
+                'Esporta CSV'
+              }
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>
-                {lang === 'en' ? 'Export CSV' :
-                 lang === 'es' ? 'Exportar CSV' :
-                 lang === 'de' ? 'CSV Exportieren' :
-                 'Esporta CSV'}
-              </span>
+              <Download className="w-3 h-3" />
+              <span>CSV</span>
             </button>
             <button
               onClick={handlePrint}
-              className="bg-emerald-800 hover:bg-emerald-900 border border-emerald-950 text-white text-[11px] font-bold py-1 px-2 rounded-lg shadow-xs flex items-center gap-1 cursor-pointer"
+              className="bg-emerald-800 hover:bg-emerald-900 border border-emerald-950 text-white text-[10px] font-bold py-0.5 px-1.5 rounded-lg shadow-xs flex items-center gap-0.5 cursor-pointer"
+              title={
+                lang === 'en' ? 'Print PDF' :
+                lang === 'es' ? 'Imprimir PDF' :
+                lang === 'de' ? 'PDF Drucken' :
+                'Stampa PDF'
+              }
             >
-              <Printer className="w-3.5 h-3.5 text-emerald-100" />
-              <span>
-                {lang === 'en' ? 'Print PDF' :
-                 lang === 'es' ? 'Imprimir PDF' :
-                 lang === 'de' ? 'PDF Drucken' :
-                 'Stampa PDF'}
-              </span>
+              <Printer className="w-3 h-3 text-emerald-100" />
+              <span>PDF</span>
             </button>
             <button
               onClick={handlePrintCondensed}
-              className="bg-teal-700 hover:bg-teal-800 border border-teal-900 text-white text-[11px] font-bold py-1 px-2 rounded-lg shadow-xs flex items-center gap-1 cursor-pointer"
+              className="bg-teal-700 hover:bg-teal-800 border border-teal-900 text-white text-[10px] font-bold py-0.5 px-1.5 rounded-lg shadow-xs flex items-center gap-0.5 cursor-pointer"
+              title={
+                lang === 'en' ? 'Condensed PDF' :
+                lang === 'es' ? 'PDF Condensado' :
+                lang === 'de' ? 'Kompakt PDF' :
+                'PDF condensata'
+              }
             >
-              <Printer className="w-3.5 h-3.5 text-teal-100" />
+              <Printer className="w-3 h-3 text-teal-100" />
               <span>
-                {lang === 'en' ? 'Condensed PDF' :
-                 lang === 'es' ? 'PDF Condensado' :
-                 lang === 'de' ? 'Kompakt PDF' :
-                 'PDF condensata'}
+                {lang === 'en' ? 'Cond.' :
+                 lang === 'es' ? 'Cond.' :
+                 lang === 'de' ? 'Komp.' :
+                 'Cond.'}
               </span>
             </button>
           </div>
