@@ -14,6 +14,8 @@ interface SavedTanksListProps {
   lang?: Language;
   activeTankId: string | null;
   setActiveTankId: (id: string | null) => void;
+  suggestedName?: string;
+  onSaveAndDownload?: () => void;
 }
 
 export default function SavedTanksList({ 
@@ -21,12 +23,21 @@ export default function SavedTanksList({
   onLoadTank, 
   lang = 'it',
   activeTankId,
-  setActiveTankId
+  setActiveTankId,
+  suggestedName = '',
+  onSaveAndDownload
 }: SavedTanksListProps) {
   const t = translations[lang];
   const [savedTanks, setSavedTanks] = useState<SavedTank[]>([]);
-  const [tankName, setTankName] = useState('');
+  const [tankName, setTankName] = useState(suggestedName);
+  const [nameTouched, setNameTouched] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Keep proposing the auto-generated name until the user edits it manually
+  useEffect(() => {
+    if (!nameTouched) setTankName(suggestedName);
+  }, [suggestedName, nameTouched]);
+
 
   // States for editing/renaming
   const [editingId, setEditingId] = useState<string | null>(null);
