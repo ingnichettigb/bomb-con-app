@@ -379,7 +379,7 @@ export default function App() {
           </div>
 
           {/* Header actions: PDF, Condensed PDF, Language, Info, Close */}
-          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          <div className="flex items-center gap-1.5 flex-nowrap justify-end">
             <button
               type="button"
               onClick={() => generateCalibrationPDF(result, lang, compilerInfo, false, reportNumber)}
