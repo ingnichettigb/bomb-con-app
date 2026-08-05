@@ -130,7 +130,9 @@ export default function SavedTanksList({
       });
     }
 
-    setTankName('');
+    setNameTouched(false);
+    setTankName(suggestedName);
+
     setTimeout(() => setMessage(null), 5000);
   };
 
