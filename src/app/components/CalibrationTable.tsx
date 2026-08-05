@@ -887,32 +887,32 @@ export default function CalibrationTable({ result, lang = 'it', compilerInfo }: 
   return (
     <div className="space-y-4">
       {/* Table Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 border-4 border-double border-emerald-800 rounded-xl shadow-xs">
-        <div className="flex items-center gap-1.5 bg-white border border-neutral-300 rounded-lg px-3 py-1.5 shadow-xs w-full sm:max-w-xs">
-          <Search className="w-4 h-4 text-neutral-400 shrink-0" />
+      <div className="flex flex-row items-center justify-between gap-2 bg-white p-2.5 border-4 border-double border-emerald-800 rounded-xl shadow-xs overflow-hidden">
+        <div className="flex items-center gap-1.5 bg-white border border-neutral-300 rounded-lg px-2 py-1 shadow-xs w-32 sm:w-36 shrink-0">
+          <Search className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
           <input
             type="text"
             placeholder={
-              lang === 'en' ? 'Search height (cm or mm)...' :
-              lang === 'es' ? 'Buscar altura (cm o mm)...' :
-              lang === 'de' ? 'Höhe suchen (cm oder mm)...' :
-              'Cerca altezza (cm o mm)...'
+              lang === 'en' ? 'Search height...' :
+              lang === 'es' ? 'Buscar altura...' :
+              lang === 'de' ? 'Höhe suchen...' :
+              'Cerca altezza...'
             }
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setListPage(1);
             }}
-            className="text-xs bg-transparent w-full text-neutral-900 placeholder-neutral-400 focus:outline-hidden"
+            className="text-[11px] bg-transparent w-full text-neutral-900 placeholder-neutral-400 focus:outline-hidden"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-row items-center gap-1.5">
           {/* View Toggle */}
-          <div className="flex bg-neutral-200 p-1 rounded-lg text-xs font-semibold text-neutral-600">
+          <div className="flex bg-neutral-200 p-0.5 rounded-lg text-[11px] font-semibold text-neutral-600 shrink-0">
             <button
               onClick={() => setViewType('grid')}
-              className={`flex items-center gap-1 py-1 px-3 rounded-md transition-all cursor-pointer ${
+              className={`flex items-center gap-1 py-1 px-2 rounded-md transition-all cursor-pointer ${
                 viewType === 'grid' ? 'bg-white text-neutral-900 shadow-xs' : 'hover:bg-neutral-300'
               }`}
               title={
@@ -932,7 +932,7 @@ export default function CalibrationTable({ result, lang = 'it', compilerInfo }: 
             </button>
             <button
               onClick={() => setViewType('list')}
-              className={`flex items-center gap-1 py-1 px-3 rounded-md transition-all cursor-pointer ${
+              className={`flex items-center gap-1 py-1 px-2 rounded-md transition-all cursor-pointer ${
                 viewType === 'list' ? 'bg-white text-neutral-900 shadow-xs' : 'hover:bg-neutral-300'
               }`}
               title={
@@ -953,10 +953,10 @@ export default function CalibrationTable({ result, lang = 'it', compilerInfo }: 
           </div>
 
           {/* Export & Print */}
-          <div className="flex gap-1.5">
+          <div className="flex gap-1 shrink-0">
             <button
               onClick={viewType === 'grid' ? handleExportGridCSV : handleExportListCSV}
-              className="bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 text-xs font-bold py-1.5 px-3 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 text-[11px] font-bold py-1 px-2 rounded-lg shadow-xs flex items-center gap-1 cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               <span>
@@ -968,7 +968,7 @@ export default function CalibrationTable({ result, lang = 'it', compilerInfo }: 
             </button>
             <button
               onClick={handlePrint}
-              className="bg-emerald-800 hover:bg-emerald-900 border border-emerald-950 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="bg-emerald-800 hover:bg-emerald-900 border border-emerald-950 text-white text-[11px] font-bold py-1 px-2 rounded-lg shadow-xs flex items-center gap-1 cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5 text-emerald-100" />
               <span>
@@ -980,14 +980,14 @@ export default function CalibrationTable({ result, lang = 'it', compilerInfo }: 
             </button>
             <button
               onClick={handlePrintCondensed}
-              className="bg-teal-700 hover:bg-teal-800 border border-teal-900 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="bg-teal-700 hover:bg-teal-800 border border-teal-900 text-white text-[11px] font-bold py-1 px-2 rounded-lg shadow-xs flex items-center gap-1 cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5 text-teal-100" />
               <span>
                 {lang === 'en' ? 'Condensed PDF' :
                  lang === 'es' ? 'PDF Condensado' :
                  lang === 'de' ? 'Kompakt PDF' :
-                 'Stampa PDF condensata'}
+                 'PDF condensata'}
               </span>
             </button>
           </div>
