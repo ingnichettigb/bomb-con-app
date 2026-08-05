@@ -786,35 +786,17 @@ export default function App() {
           <section className="space-y-6 print:w-full">
             
 
-            {/* STEP 7 - Save & export */}
-            {step === 7 && (
-            <div className="print:hidden space-y-3">
-              <button
-                type="button"
-                onClick={handleSaveAndDownload}
-                className="w-full bg-blue-800 hover:bg-blue-900 text-white font-black py-4 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-3 text-sm uppercase tracking-wide cursor-pointer hover:scale-[1.005] active:scale-[0.995]"
-              >
-                <Save className="w-5 h-5 text-blue-200 shrink-0" />
-                <span>
-                  {lang === 'en' ? 'Save Data in Memory and File' :
-                   lang === 'es' ? 'Guardar Datos en Memoria y en Archivo' :
-                   lang === 'de' ? 'Daten im Speicher und in Datei speichern' :
-                   'Salva dati in memoria e in un file'}
-                </span>
-                <Download className="w-5 h-5 text-blue-200 shrink-0" />
-              </button>
-
-              {saveFeedback && (
-                <div className={`p-4 rounded-xl border text-xs font-black text-center shadow-xs transition-all animate-fade-in ${
-                  saveFeedback.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
-                    : 'bg-rose-50 text-rose-900 border-rose-300'
-                }`}>
-                  {saveFeedback.text}
-                </div>
-              )}
-            </div>
+            {/* STEP 7 - Save feedback */}
+            {step === 7 && saveFeedback && (
+              <div className={`print:hidden p-4 rounded-xl border text-xs font-black text-center shadow-xs transition-all animate-fade-in ${
+                saveFeedback.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                  : 'bg-rose-50 text-rose-900 border-rose-300'
+              }`}>
+                {saveFeedback.text}
+              </div>
             )}
+
 
             {/* STEP OUTPUTS */}
             <div className="print:block">
