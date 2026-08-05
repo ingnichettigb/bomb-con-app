@@ -14,6 +14,8 @@ interface SavedTanksListProps {
   lang?: Language;
   activeTankId: string | null;
   setActiveTankId: (id: string | null) => void;
+  suggestedName?: string;
+  onSaveAndDownload?: () => void;
 }
 
 export default function SavedTanksList({ 
@@ -21,12 +23,21 @@ export default function SavedTanksList({
   onLoadTank, 
   lang = 'it',
   activeTankId,
-  setActiveTankId
+  setActiveTankId,
+  suggestedName = '',
+  onSaveAndDownload
 }: SavedTanksListProps) {
   const t = translations[lang];
   const [savedTanks, setSavedTanks] = useState<SavedTank[]>([]);
-  const [tankName, setTankName] = useState('');
+  const [tankName, setTankName] = useState(suggestedName);
+  const [nameTouched, setNameTouched] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Keep proposing the auto-generated name until the user edits it manually
+  useEffect(() => {
+    if (!nameTouched) setTankName(suggestedName);
+  }, [suggestedName, nameTouched]);
+
 
   // States for editing/renaming
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -119,7 +130,9 @@ export default function SavedTanksList({
       });
     }
 
-    setTankName('');
+    setNameTouched(false);
+    setTankName(suggestedName);
+
     setTimeout(() => setMessage(null), 5000);
   };
 
@@ -292,10 +305,28 @@ export default function SavedTanksList({
 
   return (
     <div className="bg-white border-4 border-double border-emerald-800 rounded-xl p-5 shadow-xs">
-      <h3 className="text-base font-semibold text-neutral-900 mb-3 flex items-center gap-2">
-        <Save className="w-4 h-4 text-neutral-600" />
-        Gestione Configurazioni (SaaS Local)
-      </h3>
+      <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <h3 className="text-base font-semibold text-neutral-900 flex items-center gap-2 min-w-0">
+          <Save className="w-4 h-4 text-neutral-600" />
+          Gestione Configurazioni (SaaS Local)
+        </h3>
+        {onSaveAndDownload && (
+          <button
+            type="button"
+            onClick={onSaveAndDownload}
+            className="shrink-0 bg-blue-800 hover:bg-blue-900 text-white font-black py-2 px-3.5 rounded-lg shadow-md transition-all flex items-center justify-center gap-2 text-[11px] uppercase tracking-wide cursor-pointer"
+          >
+            <Save className="w-4 h-4 text-blue-200 shrink-0" />
+            <span>
+              {lang === 'en' ? 'Save & Export' :
+               lang === 'es' ? 'Guardar y Exportar' :
+               lang === 'de' ? 'Speichern & Export' :
+               'Salvataggio ed esportazione'}
+            </span>
+            <Download className="w-4 h-4 text-blue-200 shrink-0" />
+          </button>
+        )}
+      </div>
 
       <form onSubmit={handleSave} className="space-y-3 mb-5">
         <div>
@@ -308,7 +339,8 @@ export default function SavedTanksList({
               type="text"
               placeholder="es. Serbatoio Eni V-102"
               value={tankName}
-              onChange={(e) => setTankName(e.target.value)}
+              onChange={(e) => { setNameTouched(true); setTankName(e.target.value); }}
+
               className="w-full text-sm bg-neutral-50 border border-neutral-300 rounded-lg px-3 py-2 text-neutral-900 placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900"
             />
             <div className="flex gap-2">

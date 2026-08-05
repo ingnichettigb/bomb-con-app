@@ -231,25 +231,21 @@ export default function App() {
     setFormKey(prev => prev + 1);
   };
 
-  const handleSaveAndDownload = () => {
-    // Composition of the file name components:
-    // 1. IL NUMERO DELLA RELAZIONE
+  // Proposed save name, built with the standard naming logic
+  const suggestedSaveName = useMemo(() => {
     const relNum = reportNumber || 'RELAZIONE';
-    // 2. COMMESSA
     const commessa = input.report.commessa || input.report.riferimento || 'COMMESSA';
-    // 3. PRIME 10 CARATTERI DELLA DESCRIZIONE SERBATOIO
-    const descRaw = input.report.nomeSerbatoio || 'SERBATOIO';
-    const desc = descRaw.substring(0, 10);
-    // 4. NUMERO DI FABBRICA (factory number)
+    const desc = (input.report.nomeSerbatoio || 'SERBATOIO').substring(0, 10);
     const numFabbrica = input.report.numeroFabbrica || 'NUMERO-FABBRICA';
-
-    const rawFileName = `${relNum}-${commessa}-${desc}-${numFabbrica}`;
-    
-    // Replace incompatible file name characters (like \ / : * ? " < > | spaces) with "-"
-    // Standard safe regex to keep letters, numbers, dots, and convert anything else to '-'
-    const safeFileName = rawFileName
+    return `${relNum}-${commessa}-${desc}-${numFabbrica}`
       .replace(/[^a-zA-Z0-9.\-_]/g, '-')
-      .replace(/-+/g, '-'); // replace multiple hyphens with a single one
+      .replace(/-+/g, '-');
+  }, [reportNumber, input.report.commessa, input.report.riferimento, input.report.nomeSerbatoio, input.report.numeroFabbrica]);
+
+  const handleSaveAndDownload = () => {
+    const safeFileName = suggestedSaveName;
+
+
 
     // Create SavedTank data structure
     const newSaved = {
@@ -383,7 +379,7 @@ export default function App() {
           </div>
 
           {/* Header actions: PDF, Condensed PDF, Language, Info, Close */}
-          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          <div className="flex items-center gap-1.5 flex-nowrap justify-end">
             <button
               type="button"
               onClick={() => generateCalibrationPDF(result, lang, compilerInfo, false, reportNumber)}
@@ -610,8 +606,11 @@ export default function App() {
               lang={lang} 
               activeTankId={activeTankId} 
               setActiveTankId={setActiveTankId} 
+              suggestedName={suggestedSaveName}
+              onSaveAndDownload={handleSaveAndDownload}
             />
             )}
+
 
             {/* STEP 2 - Dati Identificativi Serbatoio */}
             {step === 2 && (
@@ -790,35 +789,17 @@ export default function App() {
           <section className="space-y-6 print:w-full">
             
 
-            {/* STEP 7 - Save & export */}
-            {step === 7 && (
-            <div className="print:hidden space-y-3">
-              <button
-                type="button"
-                onClick={handleSaveAndDownload}
-                className="w-full bg-blue-800 hover:bg-blue-900 text-white font-black py-4 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-3 text-sm uppercase tracking-wide cursor-pointer hover:scale-[1.005] active:scale-[0.995]"
-              >
-                <Save className="w-5 h-5 text-blue-200 shrink-0" />
-                <span>
-                  {lang === 'en' ? 'Save Data in Memory and File' :
-                   lang === 'es' ? 'Guardar Datos en Memoria y en Archivo' :
-                   lang === 'de' ? 'Daten im Speicher und in Datei speichern' :
-                   'Salva dati in memoria e in un file'}
-                </span>
-                <Download className="w-5 h-5 text-blue-200 shrink-0" />
-              </button>
-
-              {saveFeedback && (
-                <div className={`p-4 rounded-xl border text-xs font-black text-center shadow-xs transition-all animate-fade-in ${
-                  saveFeedback.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
-                    : 'bg-rose-50 text-rose-900 border-rose-300'
-                }`}>
-                  {saveFeedback.text}
-                </div>
-              )}
-            </div>
+            {/* STEP 7 - Save feedback */}
+            {step === 7 && saveFeedback && (
+              <div className={`print:hidden p-4 rounded-xl border text-xs font-black text-center shadow-xs transition-all animate-fade-in ${
+                saveFeedback.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                  : 'bg-rose-50 text-rose-900 border-rose-300'
+              }`}>
+                {saveFeedback.text}
+              </div>
             )}
+
 
             {/* STEP OUTPUTS */}
             <div className="print:block">
