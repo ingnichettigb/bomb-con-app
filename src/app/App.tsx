@@ -606,8 +606,11 @@ export default function App() {
               lang={lang} 
               activeTankId={activeTankId} 
               setActiveTankId={setActiveTankId} 
+              suggestedName={suggestedSaveName}
+              onSaveAndDownload={handleSaveAndDownload}
             />
             )}
+
 
             {/* STEP 2 - Dati Identificativi Serbatoio */}
             {step === 2 && (
