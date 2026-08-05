@@ -231,25 +231,21 @@ export default function App() {
     setFormKey(prev => prev + 1);
   };
 
-  const handleSaveAndDownload = () => {
-    // Composition of the file name components:
-    // 1. IL NUMERO DELLA RELAZIONE
+  // Proposed save name, built with the standard naming logic
+  const suggestedSaveName = useMemo(() => {
     const relNum = reportNumber || 'RELAZIONE';
-    // 2. COMMESSA
     const commessa = input.report.commessa || input.report.riferimento || 'COMMESSA';
-    // 3. PRIME 10 CARATTERI DELLA DESCRIZIONE SERBATOIO
-    const descRaw = input.report.nomeSerbatoio || 'SERBATOIO';
-    const desc = descRaw.substring(0, 10);
-    // 4. NUMERO DI FABBRICA (factory number)
+    const desc = (input.report.nomeSerbatoio || 'SERBATOIO').substring(0, 10);
     const numFabbrica = input.report.numeroFabbrica || 'NUMERO-FABBRICA';
-
-    const rawFileName = `${relNum}-${commessa}-${desc}-${numFabbrica}`;
-    
-    // Replace incompatible file name characters (like \ / : * ? " < > | spaces) with "-"
-    // Standard safe regex to keep letters, numbers, dots, and convert anything else to '-'
-    const safeFileName = rawFileName
+    return `${relNum}-${commessa}-${desc}-${numFabbrica}`
       .replace(/[^a-zA-Z0-9.\-_]/g, '-')
-      .replace(/-+/g, '-'); // replace multiple hyphens with a single one
+      .replace(/-+/g, '-');
+  }, [reportNumber, input.report.commessa, input.report.riferimento, input.report.nomeSerbatoio, input.report.numeroFabbrica]);
+
+  const handleSaveAndDownload = () => {
+    const safeFileName = suggestedSaveName;
+
+
 
     // Create SavedTank data structure
     const newSaved = {
