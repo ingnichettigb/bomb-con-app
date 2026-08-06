@@ -147,16 +147,17 @@ function DimLine({
       <line x1={x - 7} y1={y2} x2={x + 7} y2={y2} stroke="#334155" strokeWidth="1" />
       <line x1={x} y1={y1} x2={x} y2={y2} stroke="#334155" strokeWidth="1" />
       <text
-        x={x + 16}
+        x={x - 14}
         y={midY}
         fontSize="13"
         fontWeight={700}
         fill="#000000"
         textAnchor="middle"
-        transform={`rotate(-90 ${x + 16} ${midY})`}
+        transform={`rotate(-90 ${x - 14} ${midY})`}
       >
         {label}
       </text>
+
     </g>
   );
 }
