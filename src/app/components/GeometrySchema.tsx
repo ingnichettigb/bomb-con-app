@@ -269,26 +269,42 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const r_disp = result?.coperchio.r ?? 0;
   const isCustomHead = input.coperchio.type === 'custom';
 
-  /* ---------- layout disegno ---------- */
+  /* ---------- layout disegno: 5 fasce fisse indipendenti ---------- */
   const drawW = 800;
   const drawH = 660;
-  const cx = 430;
 
-  const topMargin = 52;
-  const bottomMargin = 52;
-  const availH = drawH - topMargin - bottomMargin;
-  const hTotSafe = hTot > 0 ? hTot : 1;
-  const scaleY = availH / hTotSafe;
+  const LEFT_W = 220;   // 1.1 colonna riquadri dati
+  const RIGHT_W = 110;  // 1.2 colonna quote
+  const TOP_BAND = 28;  // 1.3 fascia superiore incomprimibile
+  const BOTTOM_BAND = 84; // 1.4 fascia riquadro "Inclin. cono"
+  const SAFE = 24;      // 1.5 margine di sicurezza
 
-  const hCoperchio_px = hCoperchio_calc * scaleY;
-  const lCil_px = lCil * scaleY;
-  const hCono_px = hCono_calc * scaleY;
+  const zoneX0 = LEFT_W + SAFE;
+  const zoneX1 = drawW - RIGHT_W - SAFE;
+  const zoneY0 = TOP_BAND;
+  const zoneY1 = drawH - BOTTOM_BAND;
+  const availH = zoneY1 - zoneY0;
+  const cx = (zoneX0 + zoneX1) / 2;
 
-  const maxHalfWidth = 150;
-  const scaleX = Math.min(maxHalfWidth / (dInt / 2 || 1), scaleY * 1.15);
-  const halfW = (dInt / 2) * scaleX;
+  // 2.1 larghezza disegno fissa: dipende solo dal Ø, mai riscalata in orizzontale
+  const halfW = Math.min(150, (zoneX1 - zoneX0) * 0.36);
+  const scaleBase = halfW / (dInt / 2 || 1);
 
-  const yDomeTop = topMargin;
+  // 3.1 / 3.2 coperchio e fondo: geometria reale scalata, mai compressi
+  let scale = scaleBase;
+  const headsMm = hCoperchio_calc + hCono_calc;
+  if (headsMm * scale > availH * 0.9) scale = (availH * 0.9) / (headsMm || 1);
+
+  const hCoperchio_px = hCoperchio_calc * scale;
+  const hCono_px = hCono_calc * scale;
+  // 3.3 virola: tetto = altezza reale scalata, nessun minimo, si comprime sullo spazio residuo
+  const lCilPxIdeal = lCil * scale;
+  const residuoPx = Math.max(0, availH - hCoperchio_px - hCono_px);
+  const lCil_px = Math.min(lCilPxIdeal, residuoPx);
+
+  const totalDrawn = hCoperchio_px + lCil_px + hCono_px;
+  // 4.1 spazio in eccesso: disegno centrato verticalmente
+  const yDomeTop = zoneY0 + Math.max(0, (availH - totalDrawn) / 2);
   const yCilTop = yDomeTop + hCoperchio_px;
   const yCilBot = yCilTop + lCil_px;
   const yApex = yCilBot + hCono_px;
@@ -309,7 +325,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
     Z
   `;
 
-  // callout 1 — sulla curva del coperchio, vicino al raccordo
+  // callout 1 — ancoraggio percentuale sull'altezza disegnata del coperchio
   const domeT = 0.15;
   const p0 = { x: leftX, y: yCilTop };
   const p1 = { x: leftX, y: yCilTop - domeRise };
@@ -323,7 +339,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const callout1X = domePtX - 15;
   const callout1Y = domePtY - 6;
 
-  // callout 3 — sulla parete inclinata sinistra del cono (base yCilBot, apice yApex)
+  // callout 3 — 50% dell'altezza disegnata del cono (percentuale, non px assoluti)
   const coneT = 0.5;
   const coneVX = cx - leftX;
   const coneVY = yApex - yCilBot;
@@ -333,21 +349,23 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const callout3X = conePointX - (-coneVY / coneLen) * 15;
   const callout3Y = conePointY - (coneVX / coneLen) * 15;
 
-  const chainX = 640;
-  const dim4X = 730;
+  // colonna quote (destra, larghezza fissa)
+  const chainX = drawW - RIGHT_W + 16;   // 706
+  const dim4X = drawW - RIGHT_W - 8;     // 682 (quota totale, testo verso sinistra)
 
-  const boxW = 196;
+  const boxW = 208;
   const box1H = 176;
   const box1Y = Math.max(4, Math.min(callout1Y - 40, drawH - box1H - 4));
   const box3H = 155;
   const box3Y = Math.max(4, Math.min(drawH - box3H - 6, callout3Y - box3H / 2));
   const box2H = 86;
-  const box2Y = yCilMid - box2H / 2;
+  const box2Y = Math.max(4, Math.min(yCilMid - box2H / 2, drawH - box2H - 4));
 
   const boxCapTotW = Math.max(150, Math.min(230, (rightX - leftX) * 0.86));
   const boxCapTotH = 60;
   const boxCapTotX = cx - boxCapTotW / 2;
   const boxCapTotY = yCilMid - 20 - boxCapTotH;
+
 
   return (
     <div className="space-y-4">
