@@ -147,17 +147,16 @@ function DimLine({
       <line x1={x - 7} y1={y2} x2={x + 7} y2={y2} stroke="#334155" strokeWidth="1" />
       <line x1={x} y1={y1} x2={x} y2={y2} stroke="#334155" strokeWidth="1" />
       <text
-        x={x - 14}
+        x={x + 16}
         y={midY}
         fontSize="13"
         fontWeight={700}
         fill="#000000"
         textAnchor="middle"
-        transform={`rotate(-90 ${x - 14} ${midY})`}
+        transform={`rotate(-90 ${x + 16} ${midY})`}
       >
         {label}
       </text>
-
     </g>
   );
 }
@@ -270,42 +269,26 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const r_disp = result?.coperchio.r ?? 0;
   const isCustomHead = input.coperchio.type === 'custom';
 
-  /* ---------- layout disegno: 5 fasce fisse indipendenti ---------- */
+  /* ---------- layout disegno ---------- */
   const drawW = 800;
   const drawH = 660;
+  const cx = 430;
 
-  const LEFT_W = 220;   // 1.1 colonna riquadri dati
-  const RIGHT_W = 110;  // 1.2 colonna quote
-  const TOP_BAND = 28;  // 1.3 fascia superiore incomprimibile
-  const BOTTOM_BAND = 84; // 1.4 fascia riquadro "Inclin. cono"
-  const SAFE = 24;      // 1.5 margine di sicurezza
+  const topMargin = 52;
+  const bottomMargin = 52;
+  const availH = drawH - topMargin - bottomMargin;
+  const hTotSafe = hTot > 0 ? hTot : 1;
+  const scaleY = availH / hTotSafe;
 
-  const zoneX0 = LEFT_W + SAFE;
-  const zoneX1 = drawW - RIGHT_W - SAFE;
-  const zoneY0 = TOP_BAND;
-  const zoneY1 = drawH - BOTTOM_BAND;
-  const availH = zoneY1 - zoneY0;
-  const cx = (zoneX0 + zoneX1) / 2;
+  const hCoperchio_px = hCoperchio_calc * scaleY;
+  const lCil_px = lCil * scaleY;
+  const hCono_px = hCono_calc * scaleY;
 
-  // 2.1 larghezza disegno fissa: dipende solo dal Ø, mai riscalata in orizzontale
-  const halfW = Math.min(150, (zoneX1 - zoneX0) * 0.36);
-  const scaleBase = halfW / (dInt / 2 || 1);
+  const maxHalfWidth = 150;
+  const scaleX = Math.min(maxHalfWidth / (dInt / 2 || 1), scaleY * 1.15);
+  const halfW = (dInt / 2) * scaleX;
 
-  // 3.1 / 3.2 coperchio e fondo: geometria reale scalata, mai compressi
-  let scale = scaleBase;
-  const headsMm = hCoperchio_calc + hCono_calc;
-  if (headsMm * scale > availH * 0.9) scale = (availH * 0.9) / (headsMm || 1);
-
-  const hCoperchio_px = hCoperchio_calc * scale;
-  const hCono_px = hCono_calc * scale;
-  // 3.3 virola: tetto = altezza reale scalata, nessun minimo, si comprime sullo spazio residuo
-  const lCilPxIdeal = lCil * scale;
-  const residuoPx = Math.max(0, availH - hCoperchio_px - hCono_px);
-  const lCil_px = Math.min(lCilPxIdeal, residuoPx);
-
-  const totalDrawn = hCoperchio_px + lCil_px + hCono_px;
-  // 4.1 spazio in eccesso: disegno centrato verticalmente
-  const yDomeTop = zoneY0 + Math.max(0, (availH - totalDrawn) / 2);
+  const yDomeTop = topMargin;
   const yCilTop = yDomeTop + hCoperchio_px;
   const yCilBot = yCilTop + lCil_px;
   const yApex = yCilBot + hCono_px;
@@ -326,7 +309,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
     Z
   `;
 
-  // callout 1 — ancoraggio percentuale sull'altezza disegnata del coperchio
+  // callout 1 — sulla curva del coperchio, vicino al raccordo
   const domeT = 0.15;
   const p0 = { x: leftX, y: yCilTop };
   const p1 = { x: leftX, y: yCilTop - domeRise };
@@ -340,7 +323,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const callout1X = domePtX - 15;
   const callout1Y = domePtY - 6;
 
-  // callout 3 — 50% dell'altezza disegnata del cono (percentuale, non px assoluti)
+  // callout 3 — sulla parete inclinata sinistra del cono (base yCilBot, apice yApex)
   const coneT = 0.5;
   const coneVX = cx - leftX;
   const coneVY = yApex - yCilBot;
@@ -350,23 +333,21 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const callout3X = conePointX - (-coneVY / coneLen) * 15;
   const callout3Y = conePointY - (coneVX / coneLen) * 15;
 
-  // colonna quote (destra, larghezza fissa)
-  const chainX = drawW - RIGHT_W + 16;   // 706
-  const dim4X = drawW - RIGHT_W - 8;     // 682 (quota totale, testo verso sinistra)
+  const chainX = 640;
+  const dim4X = 730;
 
-  const boxW = 208;
+  const boxW = 196;
   const box1H = 176;
   const box1Y = Math.max(4, Math.min(callout1Y - 40, drawH - box1H - 4));
   const box3H = 155;
   const box3Y = Math.max(4, Math.min(drawH - box3H - 6, callout3Y - box3H / 2));
   const box2H = 86;
-  const box2Y = Math.max(4, Math.min(yCilMid - box2H / 2, drawH - box2H - 4));
+  const box2Y = yCilMid - box2H / 2;
 
   const boxCapTotW = Math.max(150, Math.min(230, (rightX - leftX) * 0.86));
   const boxCapTotH = 60;
   const boxCapTotX = cx - boxCapTotW / 2;
   const boxCapTotY = yCilMid - 20 - boxCapTotH;
-
 
   return (
     <div className="space-y-4">
@@ -467,32 +448,32 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
 
           {/* RIQUADRO 2 — VIROLA */}
           <g>
-            <rect x={6} y={box2Y} width={boxW} height={box2H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
+            <rect x={6} y={box2Y} width={146} height={box2H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
             <line
-              x1={6 + boxW}
-              y1={Math.min(Math.max(yCilMid, box2Y + 16), box2Y + box2H - 10)}
+              x1={186}
+              y1={yCilMid}
               x2={leftX - 28}
               y2={yCilMid}
               stroke="#0f766e"
               strokeWidth="1"
               strokeDasharray="3,3"
             />
-            <text x={6 + boxW / 2} y={box2Y + 18} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
+            <text x={79} y={box2Y + 18} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Sezione cilindrica
             </text>
-            <text x={6 + boxW / 2} y={box2Y + 43} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
+            <text x={79} y={box2Y + 43} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Capacità in litri
             </text>
-            <text x={6 + boxW / 2} y={box2Y + 65} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
+            <text x={79} y={box2Y + 65} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
               {result ? fmtL(result.volumeCilindro) : '—'}
             </text>
           </g>
 
           {/* RIQUADRO 3 — FONDO CONICO */}
           <g>
-            <rect x={6} y={box3Y} width={boxW} height={box3H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
+            <rect x={6} y={box3Y} width={158} height={box3H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
             <line
-              x1={6 + boxW}
+              x1={202}
               y1={Math.min(Math.max(callout3Y, box3Y + 20), box3Y + box3H - 18)}
               x2={callout3X - 13}
               y2={callout3Y}
@@ -500,43 +481,42 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
               strokeWidth="1"
               strokeDasharray="3,3"
             />
-            <text x={6 + boxW / 2} y={box3Y + 18} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
+            <text x={85} y={box3Y + 18} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Fondo conico
             </text>
-            <foreignObject x={12} y={box3Y + 26} width={boxW - 18} height="24">
+            <foreignObject x={10} y={box3Y + 26} width="146" height="24">
               <MiniField
                 label="R racc."
                 value={rRaccordoCono}
                 onChange={(v) => patchFondo({ rRaccordo: v })}
                 labelWidth="58px"
-                width="78px"
+                width="72px"
               />
             </foreignObject>
-            <foreignObject x={12} y={box3Y + 52} width={boxW - 18} height="24">
+            <foreignObject x={10} y={box3Y + 52} width="146" height="24">
               <MiniField
                 label="Colletto"
                 value={hCollettoCono}
                 onChange={(v) => patchFondo({ hColletto: v })}
                 labelWidth="58px"
-                width="78px"
+                width="72px"
               />
             </foreignObject>
-            <foreignObject x={12} y={box3Y + 78} width={boxW - 18} height="24">
+            <foreignObject x={10} y={box3Y + 78} width="146" height="24">
               <MiniField
                 label="Sp."
                 value={input.fondo.sp}
                 onChange={(v) => patchFondo({ sp: v })}
                 labelWidth="58px"
-                width="78px"
+                width="72px"
               />
             </foreignObject>
-            <text x={6 + boxW / 2} y={box3Y + 124} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
+            <text x={85} y={box3Y + 124} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Fondo conico — litri
             </text>
-            <text x={6 + boxW / 2} y={box3Y + 142} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
+            <text x={85} y={box3Y + 142} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
               {result ? fmtL(result.volumeFondo) : '—'}
             </text>
-
           </g>
 
           {/* PROFILO SERBATOIO */}
@@ -585,7 +565,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
             <text x={chainX + 10} y={(yDomeTop + yCilTop) / 2 + 5} fontSize="14" fontWeight="600" fill="#000000">
               {fmt(hCoperchio_calc)}
             </text>
-            <foreignObject x={chainX + 8} y={yCilMid - 12} width="86" height="24">
+            <foreignObject x={chainX + 8} y={yCilMid - 12} width="92" height="24">
               <input
                 type="number"
                 value={lCil}
@@ -595,7 +575,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 title="Altezza sezione cilindrica (mm)"
               />
             </foreignObject>
-            <foreignObject x={chainX + 8} y={(yCilBot + yApex) / 2 - 12} width="86" height="24">
+            <foreignObject x={chainX + 8} y={(yCilBot + yApex) / 2 - 12} width="92" height="24">
               <input
                 type="number"
                 value={hCono}
@@ -621,13 +601,12 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
             </text>
           </g>
 
-          {/* INCLINAZIONE CONO — riquadro nella fascia inferiore fissa */}
+          {/* INCLINAZIONE CONO — riquadro ancorato in basso a destra */}
           {(() => {
             const angBoxW = 108;
             const angBoxH = 42;
-            const angBoxX = Math.min(cx + halfW + 24, drawW - RIGHT_W - SAFE - angBoxW);
-            const angBoxY = drawH - BOTTOM_BAND + 14;
-
+            const angBoxX = 470;
+            const angBoxY = drawH - angBoxH - 32;
             // vertice dell'angolo: incrocio virola verticale / linea inclinata destra del cono
             const vx = rightX;
             const vy = yCilBot;
