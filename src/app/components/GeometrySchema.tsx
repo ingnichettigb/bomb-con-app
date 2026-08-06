@@ -594,7 +594,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
                 title="Altezza sezione cilindrica (mm)"
               />
             </foreignObject>
-            <foreignObject x={chainX + 8} y={(yCilBot + yApex) / 2 - 12} width="92" height="24">
+            <foreignObject x={chainX + 8} y={(yCilBot + yApex) / 2 - 12} width="86" height="24">
               <input
                 type="number"
                 value={hCono}
