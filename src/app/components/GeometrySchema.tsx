@@ -621,12 +621,13 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
             </text>
           </g>
 
-          {/* INCLINAZIONE CONO — riquadro ancorato in basso a destra */}
+          {/* INCLINAZIONE CONO — riquadro nella fascia inferiore fissa */}
           {(() => {
             const angBoxW = 108;
             const angBoxH = 42;
-            const angBoxX = 470;
-            const angBoxY = drawH - angBoxH - 32;
+            const angBoxX = Math.min(cx + halfW + 24, drawW - RIGHT_W - SAFE - angBoxW);
+            const angBoxY = drawH - BOTTOM_BAND + 14;
+
             // vertice dell'angolo: incrocio virola verticale / linea inclinata destra del cono
             const vx = rightX;
             const vy = yCilBot;
