@@ -345,8 +345,8 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const coneLen = Math.sqrt(coneVX * coneVX + coneVY * coneVY) || 1;
   const conePointX = leftX + coneVX * coneT;
   const conePointY = yCilBot + coneVY * coneT;
-  const callout3X = conePointX - (-coneVY / coneLen) * 15;
-  const callout3Y = conePointY - (coneVX / coneLen) * 15;
+  const callout3X = conePointX + (-coneVY / coneLen) * 16;
+  const callout3Y = conePointY + (coneVX / coneLen) * 16;
 
   // colonna quote (destra, larghezza fissa)
   const chainX = drawW - RIGHT_W + 16;   // 706
