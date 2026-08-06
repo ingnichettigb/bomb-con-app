@@ -584,7 +584,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
             <text x={chainX + 10} y={(yDomeTop + yCilTop) / 2 + 5} fontSize="14" fontWeight="600" fill="#000000">
               {fmt(hCoperchio_calc)}
             </text>
-            <foreignObject x={chainX + 8} y={yCilMid - 12} width="92" height="24">
+            <foreignObject x={chainX + 8} y={yCilMid - 12} width="86" height="24">
               <input
                 type="number"
                 value={lCil}
