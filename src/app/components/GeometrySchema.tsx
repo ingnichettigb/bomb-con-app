@@ -291,17 +291,14 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const halfW = Math.min(150, (zoneX1 - zoneX0) * 0.36);
   const scaleBase = halfW / (dInt / 2 || 1);
 
-  // 3.1 / 3.2 coperchio e fondo: geometria reale scalata, mai compressi
-  let scale = scaleBase;
-  const headsMm = hCoperchio_calc + hCono_calc;
-  if (headsMm * scale > availH * 0.9) scale = (availH * 0.9) / (headsMm || 1);
+  // 3.1 / 3.2 coperchio e virola: altezze GRAFICHE FISSE (non scalate, solo rappresentative)
+  const hCoperchio_px = 96;
+  const lCil_px = 250;
 
-  const hCoperchio_px = hCoperchio_calc * scale;
-  const hCono_px = hCono_calc * scale;
-  // 3.3 virola: tetto = altezza reale scalata, nessun minimo, si comprime sullo spazio residuo
-  const lCilPxIdeal = lCil * scale;
-  const residuoPx = Math.max(0, availH - hCoperchio_px - hCono_px);
-  const lCil_px = Math.min(lCilPxIdeal, residuoPx);
+  // 3.3 fondo conico: unica parte scalata — inclinazione proporzionale alla larghezza (Ø)
+  const hConoIdeal = hCono_calc * scaleBase;
+  const maxConoPx = Math.max(40, availH - hCoperchio_px - lCil_px);
+  const hCono_px = Math.min(hConoIdeal, maxConoPx);
 
   const totalDrawn = hCoperchio_px + lCil_px + hCono_px;
   // 4.1 spazio in eccesso: disegno centrato verticalmente
@@ -309,6 +306,7 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const yCilTop = yDomeTop + hCoperchio_px;
   const yCilBot = yCilTop + lCil_px;
   const yApex = yCilBot + hCono_px;
+
 
   const leftX = cx - halfW;
   const rightX = cx + halfW;
@@ -347,8 +345,8 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
   const coneLen = Math.sqrt(coneVX * coneVX + coneVY * coneVY) || 1;
   const conePointX = leftX + coneVX * coneT;
   const conePointY = yCilBot + coneVY * coneT;
-  const callout3X = conePointX - (-coneVY / coneLen) * 15;
-  const callout3Y = conePointY - (coneVX / coneLen) * 15;
+  const callout3X = conePointX + (-coneVY / coneLen) * 16;
+  const callout3Y = conePointY + (coneVX / coneLen) * 16;
 
   // colonna quote (destra, larghezza fissa)
   const chainX = drawW - RIGHT_W + 16;   // 706
