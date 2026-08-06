@@ -466,32 +466,32 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
 
           {/* RIQUADRO 2 — VIROLA */}
           <g>
-            <rect x={6} y={box2Y} width={146} height={box2H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
+            <rect x={6} y={box2Y} width={boxW} height={box2H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
             <line
-              x1={186}
-              y1={yCilMid}
+              x1={6 + boxW}
+              y1={Math.min(Math.max(yCilMid, box2Y + 16), box2Y + box2H - 10)}
               x2={leftX - 28}
               y2={yCilMid}
               stroke="#0f766e"
               strokeWidth="1"
               strokeDasharray="3,3"
             />
-            <text x={79} y={box2Y + 18} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
+            <text x={6 + boxW / 2} y={box2Y + 18} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Sezione cilindrica
             </text>
-            <text x={79} y={box2Y + 43} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
+            <text x={6 + boxW / 2} y={box2Y + 43} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Capacità in litri
             </text>
-            <text x={79} y={box2Y + 65} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
+            <text x={6 + boxW / 2} y={box2Y + 65} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
               {result ? fmtL(result.volumeCilindro) : '—'}
             </text>
           </g>
 
           {/* RIQUADRO 3 — FONDO CONICO */}
           <g>
-            <rect x={6} y={box3Y} width={158} height={box3H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
+            <rect x={6} y={box3Y} width={boxW} height={box3H} rx="5" fill="#ffffff" stroke="#0f766e" strokeWidth="1.2" />
             <line
-              x1={202}
+              x1={6 + boxW}
               y1={Math.min(Math.max(callout3Y, box3Y + 20), box3Y + box3H - 18)}
               x2={callout3X - 13}
               y2={callout3Y}
@@ -499,42 +499,43 @@ export default function GeometrySchema({ input, onChange }: GeometrySchemaProps)
               strokeWidth="1"
               strokeDasharray="3,3"
             />
-            <text x={85} y={box3Y + 18} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
+            <text x={6 + boxW / 2} y={box3Y + 18} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Fondo conico
             </text>
-            <foreignObject x={10} y={box3Y + 26} width="146" height="24">
+            <foreignObject x={12} y={box3Y + 26} width={boxW - 18} height="24">
               <MiniField
                 label="R racc."
                 value={rRaccordoCono}
                 onChange={(v) => patchFondo({ rRaccordo: v })}
                 labelWidth="58px"
-                width="72px"
+                width="78px"
               />
             </foreignObject>
-            <foreignObject x={10} y={box3Y + 52} width="146" height="24">
+            <foreignObject x={12} y={box3Y + 52} width={boxW - 18} height="24">
               <MiniField
                 label="Colletto"
                 value={hCollettoCono}
                 onChange={(v) => patchFondo({ hColletto: v })}
                 labelWidth="58px"
-                width="72px"
+                width="78px"
               />
             </foreignObject>
-            <foreignObject x={10} y={box3Y + 78} width="146" height="24">
+            <foreignObject x={12} y={box3Y + 78} width={boxW - 18} height="24">
               <MiniField
                 label="Sp."
                 value={input.fondo.sp}
                 onChange={(v) => patchFondo({ sp: v })}
                 labelWidth="58px"
-                width="72px"
+                width="78px"
               />
             </foreignObject>
-            <text x={85} y={box3Y + 124} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
+            <text x={6 + boxW / 2} y={box3Y + 124} textAnchor="middle" fontSize="11" fontWeight="600" fill="#000000">
               Fondo conico — litri
             </text>
-            <text x={85} y={box3Y + 142} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
+            <text x={6 + boxW / 2} y={box3Y + 142} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0f766e">
               {result ? fmtL(result.volumeFondo) : '—'}
             </text>
+
           </g>
 
           {/* PROFILO SERBATOIO */}
