@@ -903,24 +903,34 @@ export default function CalibrationTable({ result, lang = 'it', compilerInfo }: 
     <div className="space-y-4">
       {/* Table Toolbar */}
       <div className="flex flex-row items-center justify-between gap-1.5 bg-white p-2 border-4 border-double border-emerald-800 rounded-xl shadow-xs overflow-hidden">
-        <div className="flex items-center gap-1 bg-white border border-neutral-300 rounded-lg px-1.5 py-0.5 shadow-xs w-24 sm:w-28 shrink-0">
-          <Search className="w-3 h-3 text-neutral-400 shrink-0" />
-          <input
-            type="text"
-            placeholder={
-              lang === 'en' ? 'Search...' :
-              lang === 'es' ? 'Buscar...' :
-              lang === 'de' ? 'Suchen...' :
-              'Cerca...'
-            }
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setListPage(1);
-            }}
-            className="text-[10px] bg-transparent w-full text-neutral-900 placeholder-neutral-400 focus:outline-hidden"
-          />
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <div className="flex items-center gap-1 bg-white border border-neutral-300 rounded-lg px-2 py-1 shadow-xs w-32 sm:w-40 shrink-0">
+            <Search className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+            <input
+              type="text"
+              placeholder={
+                lang === 'en' ? 'Height (mm)...' :
+                lang === 'es' ? 'Altura (mm)...' :
+                lang === 'de' ? 'Höhe (mm)...' :
+                'Quota (mm)...'
+              }
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setListPage(1);
+              }}
+              className="text-[11px] bg-transparent w-full text-neutral-900 placeholder-neutral-400 focus:outline-hidden"
+            />
+            <span className="text-[10px] font-bold text-neutral-400 shrink-0">mm</span>
+          </div>
+          {searchLookup && (
+            <div className="text-[11px] font-bold text-emerald-900 bg-emerald-50 border border-emerald-300 rounded-lg px-2 py-1 whitespace-nowrap truncate">
+              {searchLookup.mm} mm = {formatNum(searchLookup.litri, 2)} L
+              {searchLookup.out && ' (max)'}
+            </div>
+          )}
         </div>
+
 
         <div className="flex flex-row items-center gap-1">
           {/* View Toggle */}
