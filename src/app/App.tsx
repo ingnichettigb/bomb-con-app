@@ -820,30 +820,8 @@ export default function App() {
               )}
             </div>
 
-            {/* WIZARD NAVIGATION */}
-            <div className="print:hidden flex items-center justify-between gap-3 bg-white border-4 border-double border-emerald-800 rounded-xl p-3 shadow-xs">
-              <button
-                type="button"
-                disabled={step === 1}
-                onClick={() => setStep(s => Math.max(1, s - 1))}
-                className="flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                {lang === 'en' ? 'Back' : lang === 'es' ? 'Atrás' : lang === 'de' ? 'Zurück' : 'Indietro'}
-              </button>
-              <span className="text-[10px] font-extrabold uppercase text-neutral-500 text-center px-2 hidden sm:block">
-                {stepLabels[step - 1]}
-              </span>
-              <button
-                type="button"
-                disabled={step === TOTAL_STEPS}
-                onClick={() => setStep(s => Math.min(TOTAL_STEPS, s + 1))}
-                className="flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black uppercase border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed bg-emerald-800 text-white border-emerald-950 hover:bg-emerald-900"
-              >
-                {lang === 'en' ? 'Next' : lang === 'es' ? 'Siguiente' : lang === 'de' ? 'Weiter' : 'Avanti'}
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+
+
 
             {/* Informational Guidelines Footer - Hidden on Print */}
             <footer className="p-4 bg-white border-4 border-double border-emerald-800 rounded-xl flex gap-3 text-xs text-neutral-500 print:hidden shadow-xs">
