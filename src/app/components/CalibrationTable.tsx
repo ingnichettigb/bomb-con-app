@@ -66,6 +66,21 @@ export default function CalibrationTable({ result, lang = 'it', compilerInfo }: 
 
   const totalPages = Math.ceil(filteredListData.length / rowsPerPage);
 
+  // Direct lookup: quota (mm) typed in the search field -> litres
+  const searchLookup = useMemo(() => {
+    const raw = searchQuery.trim().replace(',', '.');
+    if (!raw || !/^\d+(\.\d+)?$/.test(raw)) return null;
+    const mm = Math.round(parseFloat(raw));
+    if (mm < 0) return null;
+    const clamped = Math.min(mm, result.H_tot);
+    return {
+      mm,
+      out: mm > result.H_tot,
+      litri: result.litriCumulativi[clamped] || 0,
+    };
+  }, [searchQuery, result]);
+
+
   // Helper to format numbers
   const formatNum = (num: number, decimals: number = 2) => {
     if (num === undefined || isNaN(num)) return lang === 'en' ? '0.00' : '0,00';
